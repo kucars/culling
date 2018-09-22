@@ -137,9 +137,9 @@ namespace pcl
     * \param[in] limit_negative if set to true, then all points outside of the interval (min_distance;max_distace) are considered
     * \ingroup filters
     */
-//  template <typename pcl::PointXYZ>
+//  template <typename PointInT>
   void
-  getMinMax3D (const typename pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud,
+  getMinMax3D (const typename pcl::PointCloud<PointInT>::ConstPtr &cloud,
                const std::string &distance_field_name, float min_distance, float max_distance,
                Eigen::Vector4f &min_pt, Eigen::Vector4f &max_pt, bool limit_negative = false);
 
@@ -155,9 +155,9 @@ namespace pcl
     * \param[in] limit_negative if set to true, then all points outside of the interval (min_distance;max_distace) are considered
     * \ingroup filters
     */
-//  template <typename pcl::PointXYZ>
+//  template <typename PointInT>
   void
-  getMinMax3D (const typename pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud,
+  getMinMax3D (const typename pcl::PointCloud<PointInT>::ConstPtr &cloud,
                const std::vector<int> &indices,
                const std::string &distance_field_name, float min_distance, float max_distance,
                Eigen::Vector4f &min_pt, Eigen::Vector4f &max_pt, bool limit_negative = false);
@@ -174,16 +174,16 @@ namespace pcl
     * \author Radu B. Rusu, Bastian Steder
     * \ingroup filters
     */
-//  template <typename pcl::PointXYZ>
-  class VoxelGridT: public Filter<pcl::PointXYZ>
+  template <typename PointInT>
+  class VoxelGridT: public Filter<PointInT>
   {
     protected:
-      using Filter<pcl::PointXYZ>::filter_name_;
-      using Filter<pcl::PointXYZ>::getClassName;
-      using Filter<pcl::PointXYZ>::input_;
-      using Filter<pcl::PointXYZ>::indices_;
+      using Filter<PointInT>::filter_name_;
+      using Filter<PointInT>::getClassName;
+      using Filter<PointInT>::input_;
+      using Filter<PointInT>::indices_;
 
-      typedef typename Filter<pcl::PointXYZ>::PointCloud PointCloud;
+      typedef typename Filter<PointInT>::PointCloud PointCloud;
       typedef typename PointCloud::Ptr PointCloudPtr;
       typedef typename PointCloud::ConstPtr PointCloudConstPtr;
       typedef boost::shared_ptr< VoxelGridT > Ptr;
@@ -193,7 +193,7 @@ namespace pcl
     public:
 
       //new variables
-      std::vector<std::vector<std::vector<std::vector<pcl::PointXYZ> > > > voxelSet;//include the set of points of the voxel
+      std::vector<std::vector<std::vector<std::vector<PointInT> > > > voxelSet;//include the set of points of the voxel
       Eigen::Vector4f minbb;
       Eigen::Vector4f maxbb;
 
@@ -311,7 +311,7 @@ namespace pcl
         * \param[in] p the point to get the index at
         */
       inline int
-      getCentroidIndex (const pcl::PointXYZ &p)
+      getCentroidIndex (const PointInT &p)
       {
         return (leaf_layout_.at ((Eigen::Vector4i (static_cast<int> (floor (p.x * inverse_leaf_size_[0])),
                                                    static_cast<int> (floor (p.y * inverse_leaf_size_[1])),
@@ -325,7 +325,7 @@ namespace pcl
         * \note for efficiency, user must make sure that the saving of the leaf layout is enabled and filtering performed
         */
       inline std::vector<int>
-      getNeighborCentroidIndices (const pcl::PointXYZ &reference_point, const Eigen::MatrixXi &relative_coordinates)
+      getNeighborCentroidIndices (const PointInT &reference_point, const Eigen::MatrixXi &relative_coordinates)
       {
         Eigen::Vector4i ijk (static_cast<int> (floor (reference_point.x * inverse_leaf_size_[0])),
                              static_cast<int> (floor (reference_point.y * inverse_leaf_size_[1])),
@@ -496,7 +496,7 @@ namespace pcl
       /** \brief Set to true if we want to return the data outside (\a filter_limit_min_;\a filter_limit_max_). Default: false. */
       bool filter_limit_negative_;
 
-      typedef typename pcl::traits::fieldList<pcl::PointXYZ>::type FieldList;
+      typedef typename pcl::traits::fieldList<PointInT>::type FieldList;
 
       /** \brief Downsample a Point Cloud using a voxelized grid approach
         * \param[out] output the resultant point cloud message

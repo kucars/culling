@@ -30,14 +30,14 @@ OcclusionCullingGPU::OcclusionCullingGPU(ros::NodeHandle &n, std::string modelNa
 {
 
    fov_pub = n.advertise<visualization_msgs::MarkerArray>("fov", 10);
-   cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-   cloudCopy = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-   filtered_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
+   cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   cloudCopy = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   filtered_cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
 
-   occlusionFreeCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-   FrustumCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
+   occlusionFreeCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   FrustumCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
    std::string path = ros::package::getPath("component_test");
-   pcl::io::loadPCDFile<pcl::PointXYZ> (path+"/src/pcd/"+model, *cloud);
+   pcl::io::loadPCDFile<PointInT> (path+"/src/pcd/"+model, *cloud);
    cloudCopy->points = cloud->points;
    voxelRes = 0.5f;
    OriginalVoxelsSize=0.0;
@@ -65,7 +65,7 @@ OcclusionCullingGPU::OcclusionCullingGPU(ros::NodeHandle &n, std::string modelNa
        }
    }
 
-   pcl::VoxelGrid<pcl::PointXYZ> voxelgrid;
+   pcl::VoxelGrid<PointInT> voxelgrid;
    voxelgrid.setInputCloud (cloud);
    voxelgrid.setLeafSize(voxelRes, voxelRes,voxelRes);
    voxelgrid.filter (*filtered_cloud);
@@ -78,17 +78,17 @@ OcclusionCullingGPU::OcclusionCullingGPU(ros::NodeHandle &n, std::string modelNa
 
    AccuracyMaxSet = false;
 }
-OcclusionCullingGPU::OcclusionCullingGPU(ros::NodeHandle &n, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudPtr):
+OcclusionCullingGPU::OcclusionCullingGPU(ros::NodeHandle &n, pcl::PointCloud<PointInT>::Ptr& cloudPtr):
     nh(n),
     fc(true)
 {
    fov_pub = n.advertise<visualization_msgs::MarkerArray>("fov", 10);
-   cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-   cloudCopy = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-   filtered_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
+   cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   cloudCopy = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   filtered_cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
 
-   occlusionFreeCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-   FrustumCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
+   occlusionFreeCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   FrustumCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
    cloud->points = cloudPtr->points;
    cloudCopy->points = cloud->points;
    
@@ -118,7 +118,7 @@ OcclusionCullingGPU::OcclusionCullingGPU(ros::NodeHandle &n, pcl::PointCloud<pcl
        }
    }
 
-   pcl::VoxelGrid<pcl::PointXYZ> voxelgrid;
+   pcl::VoxelGrid<PointInT> voxelgrid;
    voxelgrid.setInputCloud (cloud);
    voxelgrid.setLeafSize (0.5f, 0.5f, 0.5f);
    voxelgrid.filter (*filtered_cloud);
@@ -137,13 +137,13 @@ OcclusionCullingGPU::OcclusionCullingGPU(std::string modelName):
     model(modelName),
     fc(true)
 {
-    cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-    filtered_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-    cloudCopy = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-    FrustumCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
+    cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    filtered_cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    cloudCopy = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    FrustumCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
 
     std::string path = ros::package::getPath("component_test");
-    pcl::io::loadPCDFile<pcl::PointXYZ> (path+"/src/pcd/"+model, *cloud);
+    pcl::io::loadPCDFile<PointInT> (path+"/src/pcd/"+model, *cloud);
     cloudCopy->points = cloud->points;   
     
     voxelRes = 0.5f;
@@ -171,7 +171,7 @@ OcclusionCullingGPU::OcclusionCullingGPU(std::string modelName):
             }
         }
     }
-    pcl::VoxelGrid<pcl::PointXYZ> voxelgrid;
+    pcl::VoxelGrid<PointInT> voxelgrid;
     voxelgrid.setInputCloud (cloud);
     voxelgrid.setLeafSize(voxelRes, voxelRes,voxelRes);
     voxelgrid.filter (*filtered_cloud);
@@ -188,13 +188,13 @@ OcclusionCullingGPU::OcclusionCullingGPU():
     model(NULL),
     fc(true)
 {
-    cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-    filtered_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-    cloudCopy = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
-    FrustumCloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud <pcl::PointXYZ>);
+    cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    filtered_cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    cloudCopy = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    FrustumCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
 
     std::string path = ros::package::getPath("component_test");
-    pcl::io::loadPCDFile<pcl::PointXYZ> (path+"/src/pcd/scaled_desktop.pcd", *cloud);
+    pcl::io::loadPCDFile<PointInT> (path+"/src/pcd/scaled_desktop.pcd", *cloud);
     cloudCopy->points = cloud->points;
     
     voxelRes = 0.5f;
@@ -222,7 +222,7 @@ OcclusionCullingGPU::OcclusionCullingGPU():
             }
         }
     }
-    pcl::VoxelGrid<pcl::PointXYZ> voxelgrid;
+    pcl::VoxelGrid<PointInT> voxelgrid;
     voxelgrid.setInputCloud (cloud);
     voxelgrid.setLeafSize(voxelRes, voxelRes,voxelRes);
     voxelgrid.filter (*filtered_cloud);
@@ -239,8 +239,8 @@ OcclusionCullingGPU::~OcclusionCullingGPU()
 {
 }
 
-bool OcclusionCullingGPU::contains(pcl::PointCloud<pcl::PointXYZ> c, pcl::PointXYZ p) {
-    pcl::PointCloud<pcl::PointXYZ>::iterator it = c.begin();
+bool OcclusionCullingGPU::contains(pcl::PointCloud<PointInT> c, PointInT p) {
+    pcl::PointCloud<PointInT>::iterator it = c.begin();
     for (; it != c.end(); ++it) {
         if (it->x == p.x && it->y == p.y && it->z == p.z)
             return true;
@@ -249,9 +249,9 @@ bool OcclusionCullingGPU::contains(pcl::PointCloud<pcl::PointXYZ> c, pcl::PointX
 }
 
 //c2 the cloud that you want to compare with the original cloud in the occlusion culling
-pcl::PointCloud<pcl::PointXYZ> OcclusionCullingGPU::pointsDifference(pcl::PointCloud<pcl::PointXYZ> c2) {
-    pcl::PointCloud<pcl::PointXYZ> inter;
-    pcl::PointCloud<pcl::PointXYZ>::iterator it = cloud->begin();
+pcl::PointCloud<PointInT> OcclusionCullingGPU::pointsDifference(pcl::PointCloud<PointInT> c2) {
+    pcl::PointCloud<PointInT> inter;
+    pcl::PointCloud<PointInT>::iterator it = cloud->begin();
     for (; it != cloud->end(); ++it) {
         if (!contains(c2, *it))
             inter.push_back(*it);
@@ -260,9 +260,9 @@ pcl::PointCloud<pcl::PointXYZ> OcclusionCullingGPU::pointsDifference(pcl::PointC
     return inter;
 }
 
-pcl::PointCloud<pcl::PointXYZ> OcclusionCullingGPU::extractVisibleSurface(geometry_msgs::Pose location)
+pcl::PointCloud<PointInT> OcclusionCullingGPU::extractVisibleSurface(geometry_msgs::Pose location)
 {
-    pcl::PointCloud <pcl::PointXYZ>::Ptr output (new pcl::PointCloud <pcl::PointXYZ>);
+    pcl::PointCloud <PointInT>::Ptr output (new pcl::PointCloud <PointInT>);
     Eigen::Matrix4f camera_pose;
     Eigen::Matrix3d Rd;
     Eigen::Matrix3f Rf;
@@ -315,7 +315,7 @@ pcl::PointCloud<pcl::PointXYZ> OcclusionCullingGPU::extractVisibleSurface(geomet
     return freeCloud;
 }
 
-float OcclusionCullingGPU::calcCoveragePercent(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered)
+float OcclusionCullingGPU::calcCoveragePercent(pcl::PointCloud<PointInT>::Ptr cloud_filtered)
 {
 
     // *******************original cloud Grid***************************
@@ -384,7 +384,7 @@ float OcclusionCullingGPU::calcCoveragePercent(pcl::PointCloud<pcl::PointXYZ>::P
 
     return coverage_percentage;
 }
-double OcclusionCullingGPU::calcAvgAccuracy(pcl::PointCloud<pcl::PointXYZ> pointCloud)
+double OcclusionCullingGPU::calcAvgAccuracy(pcl::PointCloud<PointInT> pointCloud)
 {
     double avgAccuracy;
     double pointError,val,errorSum=0, errorRatio;
@@ -398,12 +398,12 @@ double OcclusionCullingGPU::calcAvgAccuracy(pcl::PointCloud<pcl::PointXYZ> point
     avgAccuracy=errorSum/pointCloud.size();
     return avgAccuracy;
 }
-double OcclusionCullingGPU::calcAvgAccuracy(pcl::PointCloud<pcl::PointXYZ> pointCloud, geometry_msgs::Pose cameraPose)
+double OcclusionCullingGPU::calcAvgAccuracy(pcl::PointCloud<PointInT> pointCloud, geometry_msgs::Pose cameraPose)
 {
 
         double avgAccuracy;
         double pointError,val,errorSum=0;
-        pcl::PointCloud<pcl::PointXYZ> transformedPointCloud;
+        pcl::PointCloud<PointInT> transformedPointCloud;
         transformedPointCloud = pointCloudViewportTransform(pointCloud, cameraPose);
 
         for (int j=0; j<transformedPointCloud.size(); j++)
@@ -419,7 +419,7 @@ double OcclusionCullingGPU::calcAvgAccuracy(pcl::PointCloud<pcl::PointXYZ> point
 void OcclusionCullingGPU::SSMaxMinAccuracy(std::vector<geometry_msgs::PoseArray> sensorsPoses)
 {
 
-    pcl::PointCloud<pcl::PointXYZ> global, globalVis;
+    pcl::PointCloud<PointInT> global, globalVis;
     double max=0,min=std::numeric_limits<double>::max();
 
     for (int i = 0 ; i<sensorsPoses.size(); i++)
@@ -432,8 +432,8 @@ void OcclusionCullingGPU::SSMaxMinAccuracy(std::vector<geometry_msgs::PoseArray>
                 //std::cout<<" camera: "<<r<<" "<<p<<" "<<y<<std::endl;
                 //std::cout<<" camera: "<<r*180/M_PI<<" "<<p*180/M_PI<<" "<<y*180/M_PI<<std::endl;
 
-                pcl::PointCloud<pcl::PointXYZ> visible;
-                pcl::PointCloud<pcl::PointXYZ> transformedVisible;
+                pcl::PointCloud<PointInT> visible;
+                pcl::PointCloud<PointInT> transformedVisible;
 
                 visible += extractVisibleSurface(sensorsPoses[i].poses[j]);
 
@@ -480,10 +480,10 @@ void OcclusionCullingGPU::transformPointMatVec(tf::Vector3 translation, tf::Matr
 //translate the pcd viewport (0,0,0) to the camera viewport (viewpoints)
 //All pcd files have viewports set to (0,0,0) ... occlusion culling extract the point cloud but doesn't change the point cloud depth
 //This function will transform the viewport to the new viewport
-pcl::PointCloud<pcl::PointXYZ> OcclusionCullingGPU::pointCloudViewportTransform(pcl::PointCloud<pcl::PointXYZ> pointCloud, geometry_msgs::Pose cameraPose)
+pcl::PointCloud<PointInT> OcclusionCullingGPU::pointCloudViewportTransform(pcl::PointCloud<PointInT> pointCloud, geometry_msgs::Pose cameraPose)
 {
 
-    pcl::PointCloud<pcl::PointXYZ> posArray;
+    pcl::PointCloud<PointInT> posArray;
     tf::Matrix3x3 rotZ, rotX, rotY, rotE;
 
     //traslation accroding to the camera position
@@ -550,7 +550,7 @@ pcl::PointCloud<pcl::PointXYZ> OcclusionCullingGPU::pointCloudViewportTransform(
         //transformPointMatVec(transE, rotX, ptOUT2, ptOUT3);
         //std::cout<<"point out4 : "<<ptOUT3.x<<" "<<ptOUT3.y << " "<<ptOUT3.z<<" "<<std::endl;
 
-        pcl::PointXYZ finalPt;
+        PointInT finalPt;
         finalPt.data[0] = ptOUT2.x;
         finalPt.data[1] = ptOUT2.y;
         finalPt.data[2] = ptOUT2.z;
@@ -566,7 +566,7 @@ pcl::PointCloud<pcl::PointXYZ> OcclusionCullingGPU::pointCloudViewportTransform(
 void OcclusionCullingGPU::visualizeFOV(geometry_msgs::Pose location)
 {
 
-    pcl::PointCloud <pcl::PointXYZ>::Ptr output (new pcl::PointCloud <pcl::PointXYZ>);
+    pcl::PointCloud <PointInT>::Ptr output (new pcl::PointCloud <PointInT>);
 
     //    pcl::FrustumCullingGPU fc(true);
     //    fc.setInputCloud (cloud);

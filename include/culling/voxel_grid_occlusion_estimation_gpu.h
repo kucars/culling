@@ -52,16 +52,17 @@ namespace pcl
     * \author Christian Potthast
     * \ingroup filters
     */
-  class VoxelGridOcclusionEstimationGPU: public VoxelGrid<pcl::PointXYZ>
+  template<typename PointInT>
+  class VoxelGridOcclusionEstimationGPU: public VoxelGrid<PointInT>
   {
     protected:
-      using VoxelGrid<pcl::PointXYZ>::min_b_;
-      using VoxelGrid<pcl::PointXYZ>::max_b_;
-      using VoxelGrid<pcl::PointXYZ>::div_b_;
-      using VoxelGrid<pcl::PointXYZ>::leaf_size_;
-      using VoxelGrid<pcl::PointXYZ>::inverse_leaf_size_;
+      using VoxelGrid<PointInT>::min_b_;
+      using VoxelGrid<PointInT>::max_b_;
+      using VoxelGrid<PointInT>::div_b_;
+      using VoxelGrid<PointInT>::leaf_size_;
+      using VoxelGrid<PointInT>::inverse_leaf_size_;
 
-      typedef typename Filter<pcl::PointXYZ>::PointCloud PointCloud;
+      typedef typename Filter<PointInT>::PointCloud PointCloud;
       typedef typename PointCloud::Ptr PointCloudPtr;
       typedef typename PointCloud::ConstPtr PointCloudConstPtr;
 
@@ -129,7 +130,7 @@ namespace pcl
       int
       occlusionEstimationAll (std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& occluded_voxels);
 
-      int occlusionFreeEstimationAll(PointCloud::Ptr inCloud, pcl::PointCloud<pcl::PointXYZ> &occlusionFreePoints);
+      int occlusionFreeEstimationAll(PointCloud::Ptr inCloud, pcl::PointCloud<PointInT> &occlusionFreePoints);
 
       /** \brief Returns the voxel grid filtered point cloud
         * \return The voxel grid filtered point cloud
@@ -180,8 +181,8 @@ namespace pcl
       float
       rayBoxIntersection (const Eigen::Vector4f& origin,
                           const Eigen::Vector4f& direction,
-                          pcl::PointXYZ &minPoint,
-                          pcl::PointXYZ &maxPoint);
+                          PointInT &minPoint,
+                          PointInT &maxPoint);
 
       // voxel grid filtered cloud
       PointCloud filtered_cloud_;

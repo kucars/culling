@@ -417,7 +417,7 @@ __global__ void rayTraversalGPU(double *x, double*y, double*z,float * inverse_le
     }
 }
 
-int pcl::VoxelGridOcclusionEstimationGPU::occlusionFreeEstimationAll(pcl::PointCloud <pcl::PointXYZ>::Ptr inCloud, pcl::PointCloud<pcl::PointXYZ>& occlusionFreePoints)
+int pcl::VoxelGridOcclusionEstimationGPU::occlusionFreeEstimationAll(pcl::PointCloud <PointInT>::Ptr inCloud, pcl::PointCloud<PointInT>& occlusionFreePoints)
 {
     if (!initialized_)
     {
@@ -641,7 +641,7 @@ pcl::VoxelGridOcclusionEstimationGPU::rayBoxIntersection (const Eigen::Vector4f&
 
 float
 pcl::VoxelGridOcclusionEstimationGPU::rayBoxIntersection (const Eigen::Vector4f& origin,
-                                                               const Eigen::Vector4f& direction, pcl::PointXYZ &minPoint,pcl::PointXYZ &maxPoint)
+                                                               const Eigen::Vector4f& direction, PointInT &minPoint,PointInT &maxPoint)
 {
   float tmin, tmax, tymin, tymax, tzmin, tzmax;
 

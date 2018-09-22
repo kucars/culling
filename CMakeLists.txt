@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(culling)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+#add_compile_options(-std=c++11)
 #add_definitions(-std=c++11)
 
 #find_package(octomap REQUIRED)
@@ -63,12 +63,16 @@ if (CUDA_FOUND)
   cuda_add_library(voxel_grid_occlusion_estimation_gpu src/voxel_grid_occlusion_estimation_gpu.cu)
   add_library(occlusion_culling_gpu src/occlusion_culling_gpu.cpp)
   target_link_libraries(occlusion_culling_gpu frustum_culling_gpu voxel_grid_occlusion_estimation_gpu ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-  
+
 endif()
 
-add_executable(occlusion_culling_test src/occlusion_culling_test.cpp src/occlusion_culling.cpp src/voxel_grid_occlusion_estimation.cpp src/frustum_culling.cpp)
+add_executable(occlusion_culling_test 
+              src/occlusion_culling_test.cpp 
+              src/occlusion_culling.cpp
+              src/voxel_grid_occlusion_estimation.cpp
+              src/frustum_culling.cpp)
 add_dependencies(occlusion_culling_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(occlusion_culling_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${fcl_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OCTOMAP_LIBRARIES} ${LIBFCL_LIBRARIES})
 
-add_executable (voxel_grid_occlusion_estimation_test src/voxel_grid_occlusion_estimation_test.cpp)
-target_link_libraries(voxel_grid_occlusion_estimation_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${fcl_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OCTOMAP_LIBRARIES} ${LIBFCL_LIBRARIES})
+#add_executable (voxel_grid_occlusion_estimation_test src/voxel_grid_occlusion_estimation_test.cpp)
+#target_link_libraries(voxel_grid_occlusion_estimation_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${fcl_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OCTOMAP_LIBRARIES} ${LIBFCL_LIBRARIES})

@@ -114,7 +114,7 @@ void pcl::FrustumCullingGPU::applyFilter (PointCloud& output)
 
         for (size_t rii = 0; rii < removed_indices_->size (); ++rii)
         {
-            pcl::PointXYZ &pt_to_remove = output.at ((*removed_indices_)[rii]);
+            PointInT &pt_to_remove = output.at ((*removed_indices_)[rii]);
             pt_to_remove.x = pt_to_remove.y = pt_to_remove.z = user_filter_value_;
             if (!pcl_isfinite (user_filter_value_))
                 output.is_dense = false;

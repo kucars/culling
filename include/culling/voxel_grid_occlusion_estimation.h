@@ -49,16 +49,17 @@ namespace pcl
     * \author Christian Potthast
     * \ingroup filters
     */
-  class VoxelGridOcclusionEstimationT: public VoxelGrid<pcl::PointXYZ>
+  template<typename PointInT>
+  class VoxelGridOcclusionEstimationT: public VoxelGrid<PointInT>
   {
     protected:
-      using VoxelGrid<pcl::PointXYZ>::min_b_;
-      using VoxelGrid<pcl::PointXYZ>::max_b_;
-      using VoxelGrid<pcl::PointXYZ>::div_b_;
-      using VoxelGrid<pcl::PointXYZ>::leaf_size_;
-      using VoxelGrid<pcl::PointXYZ>::inverse_leaf_size_;
+      using VoxelGrid<PointInT>::min_b_;
+      using VoxelGrid<PointInT>::max_b_;
+      using VoxelGrid<PointInT>::div_b_;
+      using VoxelGrid<PointInT>::leaf_size_;
+      using VoxelGrid<PointInT>::inverse_leaf_size_;
 
-      typedef typename Filter<pcl::PointXYZ>::PointCloud PointCloud;
+      typedef typename Filter<PointInT>::PointCloud PointCloud;
       typedef typename PointCloud::Ptr PointCloudPtr;
       typedef typename PointCloud::ConstPtr PointCloudConstPtr;
 
@@ -165,8 +166,8 @@ namespace pcl
       float
       rayBoxIntersection (const Eigen::Vector4f& origin,
                           const Eigen::Vector4f& direction,
-                          pcl::PointXYZ &minPoint,
-                          pcl::PointXYZ &maxPoint);
+                          PointInT &minPoint,
+                          PointInT &maxPoint);
 
     protected:
 

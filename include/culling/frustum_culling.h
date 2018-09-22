@@ -48,10 +48,10 @@ namespace pcl
    * Code example:
    *
    * \code
-   * pcl::PointCloud <pcl::PointXYZ>::Ptr source; 
+   * pcl::PointCloud <PointInT>::Ptr source; 
    * // .. read or fill the source cloud
    *
-   * pcl::FrustumCulling<pcl::PointXYZ> fc;
+   * pcl::FrustumCulling<PointInT> fc;
    * fc.setInputCloud (source);
    * fc.setVerticalFOV (45);
    * fc.setHorizontalFOV (60);
@@ -62,7 +62,7 @@ namespace pcl
    * // .. read or input the camera pose from a registration algorithm.
    * fc.setCameraPose (camera_pose);
    *
-   * pcl::PointCloud <pcl::PointXYZ> target;
+   * pcl::PointCloud <PointInT> target;
    * fc.filter (target);
    * \endcode
    *
@@ -70,9 +70,10 @@ namespace pcl
    * \author Aravindhan K Krishnan
    * \ingroup filters
    */
-  class FrustumCullingTT : public FilterIndices<pcl::PointXYZ>
+  template<typename PointInT>
+  class FrustumCullingTT : public FilterIndices<PointInT>
   {
-    typedef typename Filter<pcl::PointXYZ>::PointCloud PointCloud;
+    typedef typename Filter<PointInT>::PointCloud PointCloud;
     typedef typename PointCloud::Ptr PointCloudPtr;
     typedef typename PointCloud::ConstPtr PointCloudConstPtr;
 
@@ -82,10 +83,10 @@ namespace pcl
       typedef boost::shared_ptr< const FrustumCullingTT > ConstPtr;
 
 
-      using Filter<pcl::PointXYZ>::getClassName;
+      using Filter<PointInT>::getClassName;
 
       FrustumCullingTT (bool extract_removed_indices = false)
-        : FilterIndices<pcl::PointXYZ>::FilterIndices (extract_removed_indices)
+        : FilterIndices<PointInT>::FilterIndices (extract_removed_indices)
         , camera_pose_ (Eigen::Matrix4f::Identity ())
         , hfov_ (60.0f)
         , vfov_ (60.0f)
@@ -200,14 +201,14 @@ namespace pcl
       Eigen::Vector3f np_br;
       Eigen::Vector3f np_tl;
     protected:
-      using PCLBase<pcl::PointXYZ>::input_;
-      using PCLBase<pcl::PointXYZ>::indices_;
-      using Filter<pcl::PointXYZ>::filter_name_;
-      using FilterIndices<pcl::PointXYZ>::negative_;
-      using FilterIndices<pcl::PointXYZ>::keep_organized_;
-      using FilterIndices<pcl::PointXYZ>::user_filter_value_;
-      using FilterIndices<pcl::PointXYZ>::extract_removed_indices_;
-      using FilterIndices<pcl::PointXYZ>::removed_indices_;
+      using PCLBase<PointInT>::input_;
+      using PCLBase<PointInT>::indices_;
+      using Filter<PointInT>::filter_name_;
+      using FilterIndices<PointInT>::negative_;
+      using FilterIndices<PointInT>::keep_organized_;
+      using FilterIndices<PointInT>::user_filter_value_;
+      using FilterIndices<PointInT>::extract_removed_indices_;
+      using FilterIndices<PointInT>::removed_indices_;
 
       /** \brief Sample of point indices into a separate PointCloud
         * \param[out] output the resultant point cloud

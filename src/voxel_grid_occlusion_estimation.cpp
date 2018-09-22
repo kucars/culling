@@ -43,7 +43,8 @@
 #include <culling/voxel_grid_occlusion_estimation.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void pcl::VoxelGridOcclusionEstimationT::initializeVoxelGrid ()
+template <typename PointInT>
+void pcl::VoxelGridOcclusionEstimationT<PointInT>::initializeVoxelGrid ()
 {
   // initialization set to true
   initialized_ = true;
@@ -69,7 +70,8 @@ void pcl::VoxelGridOcclusionEstimationT::initializeVoxelGrid ()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int pcl::VoxelGridOcclusionEstimationT::occlusionEstimation (int& out_state,
+template <typename PointInT>
+int pcl::VoxelGridOcclusionEstimationT<PointInT>::occlusionEstimation (int& out_state,
                                                                 const Eigen::Vector3i& in_target_voxel)
 {
   if (!initialized_)
@@ -99,8 +101,8 @@ int pcl::VoxelGridOcclusionEstimationT::occlusionEstimation (int& out_state,
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int
-pcl::VoxelGridOcclusionEstimationT::occlusionEstimation (int& out_state,
+template <typename PointInT>
+int pcl::VoxelGridOcclusionEstimationT<PointInT>::occlusionEstimation (int& out_state,
                                                                 std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& out_ray,
                                                                 const Eigen::Vector3i& in_target_voxel)
 {
@@ -131,8 +133,8 @@ pcl::VoxelGridOcclusionEstimationT::occlusionEstimation (int& out_state,
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int
-pcl::VoxelGridOcclusionEstimationT::occlusionEstimationAll (std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& occluded_voxels)
+template <typename PointInT>
+int pcl::VoxelGridOcclusionEstimationT<PointInT>::occlusionEstimationAll (std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& occluded_voxels)
 {
   if (!initialized_)
   {
@@ -174,8 +176,8 @@ pcl::VoxelGridOcclusionEstimationT::occlusionEstimationAll (std::vector<Eigen::V
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float
-pcl::VoxelGridOcclusionEstimationT::rayBoxIntersection (const Eigen::Vector4f& origin, 
+template <typename PointInT>
+float pcl::VoxelGridOcclusionEstimationT<PointInT>::rayBoxIntersection (const Eigen::Vector4f& origin, 
                                                                const Eigen::Vector4f& direction)
 {
   float tmin, tmax, tymin, tymax, tzmin, tzmax;
@@ -240,10 +242,9 @@ pcl::VoxelGridOcclusionEstimationT::rayBoxIntersection (const Eigen::Vector4f& o
   return tmin;
 }
 
-
-float
-pcl::VoxelGridOcclusionEstimationT::rayBoxIntersection (const Eigen::Vector4f& origin,
-                                                               const Eigen::Vector4f& direction, pcl::PointXYZRGB &minPoint,pcl::PointXYZRGB &maxPoint)
+template <typename PointInT>
+float pcl::VoxelGridOcclusionEstimationT<PointInT>::rayBoxIntersection (const Eigen::Vector4f& origin,
+                                                               const Eigen::Vector4f& direction, PointInT &minPoint,PointInT &maxPoint)
 {
   float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
@@ -317,8 +318,8 @@ pcl::VoxelGridOcclusionEstimationT::rayBoxIntersection (const Eigen::Vector4f& o
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int
-pcl::VoxelGridOcclusionEstimationT::rayTraversal (const Eigen::Vector3i& target_voxel,
+template <typename PointInT>
+int pcl::VoxelGridOcclusionEstimationT<PointInT>::rayTraversal (const Eigen::Vector3i& target_voxel,
                                                          const Eigen::Vector4f& origin, 
                                                          const Eigen::Vector4f& direction,
                                                          const float t_min)
@@ -411,8 +412,8 @@ pcl::VoxelGridOcclusionEstimationT::rayTraversal (const Eigen::Vector3i& target_
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int
-pcl::VoxelGridOcclusionEstimationT::rayTraversal (std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& out_ray,
+template <typename PointInT>
+int pcl::VoxelGridOcclusionEstimationT<PointInT>::rayTraversal (std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& out_ray,
                                                          const Eigen::Vector3i& target_voxel,
                                                          const Eigen::Vector4f& origin, 
                                                          const Eigen::Vector4f& direction,

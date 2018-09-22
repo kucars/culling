@@ -43,10 +43,11 @@
 #include <pcl/common/eigen.h>
 #include <pcl/common/transforms.h>
 #include <pcl/range_image/range_image.h>
-#include <voxel_grid_occlusion_estimation_gpu.h>
+#include <culling/voxel_grid_occlusion_estimation_gpu.h>
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/PoseArray.h>
 
+template<typename PointInT>
 class OcclusionCullingGPU
 {
 public:
@@ -56,13 +57,13 @@ public:
     //     ros::Publisher original_pub;
     //     ros::Publisher visible_pub;
     ros::Publisher fov_pub;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloudCopy;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr occlusionFreeCloud;//I can add it to accumulate cloud if I want to extract visible surface from multiple locations
-    pcl::PointCloud<pcl::PointXYZ>::Ptr FrustumCloud;//frustum cull
+    pcl::PointCloud<PointInT>::Ptr cloud;
+    pcl::PointCloud<PointInT>::Ptr cloudCopy;
+    pcl::PointCloud<PointInT>::Ptr filtered_cloud;
+    pcl::PointCloud<PointInT>::Ptr occlusionFreeCloud;//I can add it to accumulate cloud if I want to extract visible surface from multiple locations
+    pcl::PointCloud<PointInT>::Ptr FrustumCloud;//frustum cull
 
-    pcl::PointCloud<pcl::PointXYZ> freeCloud;
+    pcl::PointCloud<PointInT> freeCloud;
     float voxelRes, OriginalVoxelsSize, viewEntropy;
     double id;
     pcl::VoxelGridOcclusionEstimationGPU voxelFilterOriginal;
@@ -76,22 +77,22 @@ public:
     
     //methods
     OcclusionCullingGPU(ros::NodeHandle & n, std::string modelName);
-    OcclusionCullingGPU(ros::NodeHandle & n, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudPtr);
+    OcclusionCullingGPU(ros::NodeHandle & n, pcl::PointCloud<PointInT>::Ptr& cloudPtr);
     OcclusionCullingGPU(std::string modelName);
     OcclusionCullingGPU();
     ~OcclusionCullingGPU();
-    pcl::PointCloud<pcl::PointXYZ> extractVisibleSurface(geometry_msgs::Pose location);
+    pcl::PointCloud<PointInT> extractVisibleSurface(geometry_msgs::Pose location);
     //    float calcCoveragePercent(geometry_msgs::Pose location);
-    float calcCoveragePercent(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered);
-    double calcAvgAccuracy(pcl::PointCloud<pcl::PointXYZ> pointCloud);
-    double calcAvgAccuracy(pcl::PointCloud<pcl::PointXYZ> pointCloud, geometry_msgs::Pose cameraPose);
+    float calcCoveragePercent(pcl::PointCloud<PointInT>::Ptr cloud_filtered);
+    double calcAvgAccuracy(pcl::PointCloud<PointInT> pointCloud);
+    double calcAvgAccuracy(pcl::PointCloud<PointInT> pointCloud, geometry_msgs::Pose cameraPose);
     void transformPointMatVec(tf::Vector3 translation, tf::Matrix3x3 rotation, geometry_msgs::Point32 in, geometry_msgs::Point32& out);
-    pcl::PointCloud<pcl::PointXYZ> pointCloudViewportTransform(pcl::PointCloud<pcl::PointXYZ> pointCloud, geometry_msgs::Pose cameraPose);
+    pcl::PointCloud<PointInT> pointCloudViewportTransform(pcl::PointCloud<PointInT> pointCloud, geometry_msgs::Pose cameraPose);
     void SSMaxMinAccuracy(std::vector<geometry_msgs::PoseArray> sensorsPoses);
     void visualizeFOV(geometry_msgs::Pose location);
     visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, int id, int c_color[]);
-    bool contains(pcl::PointCloud<pcl::PointXYZ> c, pcl::PointXYZ p);
-    pcl::PointCloud<pcl::PointXYZ> pointsDifference(pcl::PointCloud<pcl::PointXYZ> c2);
+    bool contains(pcl::PointCloud<PointInT> c, PointInT p);
+    pcl::PointCloud<PointInT> pointsDifference(pcl::PointCloud<PointInT> c2);
 
 };
 

@@ -84,7 +84,7 @@ getCuboid (double minX, double maxX, double minY, double maxY, double minZ, doub
 }
 
 void
-getVoxelActors (pcl::PointCloud<pcl::PointXYZ>& voxelCenters,
+getVoxelActors (pcl::PointCloud<PointInT>& voxelCenters,
                  double voxelSideLen, Eigen::Vector3f color,
                  vtkSmartPointer<vtkActorCollection> coll)
 {

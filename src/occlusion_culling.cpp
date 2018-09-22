@@ -27,18 +27,19 @@
 
 #include "culling/occlusion_culling.h"
 
-OcclusionCulling::OcclusionCulling(ros::NodeHandle &n, std::string modelName):
+template<typename PointInT>
+OcclusionCulling<PointInT>::OcclusionCulling(ros::NodeHandle &n, std::string modelName):
     nh(n),
     model(modelName),
     fc(true)
 {
     ROS_INFO("Occlusion culling constructor ");
-    rayCloud =  pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
-    cloud = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud <pcl::PointXYZRGB>); // cloud of original model
-    //occlusionFreeCloud = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud <pcl::PointXYZRGB>);
-    //FrustumCloud = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud <pcl::PointXYZRGB>);
+    rayCloud =  pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud<PointInT>);
+    cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>); // cloud of original model
+    //occlusionFreeCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    //FrustumCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
     std::string path = ros::package::getPath("usar_exploration");
-    pcl::io::loadPCDFile<pcl::PointXYZRGB> (path+"/resources/pcd/"+model, *cloud);
+    pcl::io::loadPCDFile<PointInT> (path+"/resources/pcd/"+model, *cloud);
     voxelRes = 0.5;
     OriginalVoxelsSize=0.0;
     id=0.0;
@@ -48,19 +49,179 @@ OcclusionCulling::OcclusionCulling(ros::NodeHandle &n, std::string modelName):
     fc.setNearPlaneDistance (0.3);
     fc.setFarPlaneDistance (3.0);
 }
+/*
+template<typename PointInT>
+OcclusionCulling<PointInT>::OcclusionCulling(ros::NodeHandle &n, typename pcl::PointCloud<PointInT>::Ptr& cloudPtr):
+    nh(n),
+    fc(true)
+{
+//   original_pub = nh.advertise<sensor_msgs::PointCloud2>("original_point_cloud", 10);
+//   visible_pub = nh.advertise<sensor_msgs::PointCloud2>("occlusion_free_cloud", 100);
 
-OcclusionCulling::~OcclusionCulling()
+   fov_pub = nh.advertise<visualization_msgs::MarkerArray>("fov", 100);
+   cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   cloudCopy = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   filtered_cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+
+   occlusionFreeCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   FrustumCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+   cloud->points = cloudPtr->points;
+   cloudCopy->points = cloud->points;
+    
+   voxelRes = 0.1;
+   frame_id = "world";
+   OriginalVoxelsSize=0.0;
+   id=0.0;
+   voxelFilterOriginal.setInputCloud (cloud);
+   voxelFilterOriginal.setLeafSize (voxelRes, voxelRes, voxelRes);
+   voxelFilterOriginal.initializeVoxelGrid();
+   min_b1 = voxelFilterOriginal.getMinBoxCoordinates ();
+   max_b1 = voxelFilterOriginal.getMaxBoxCoordinates ();
+   for (int kk = min_b1.z (); kk <= max_b1.z (); ++kk)
+   {
+       for (int jj = min_b1.y (); jj <= max_b1.y (); ++jj)
+       {
+           for (int ii = min_b1.x (); ii <= max_b1.x (); ++ii)
+           {
+               Eigen::Vector3i ijk1 (ii, jj, kk);
+               int index1 = voxelFilterOriginal.getCentroidIndexAt (ijk1);
+               if(index1!=-1)
+               {
+                   OriginalVoxelsSize++;
+               }
+
+           }
+       }
+   }
+
+   pcl::VoxelGrid<PointInT> voxelgrid;
+   voxelgrid.setInputCloud (cloud);
+   voxelgrid.setLeafSize (0.1f, 0.1f, 0.1f);
+   voxelgrid.filter (*filtered_cloud);
+
+   fc.setInputCloud (cloud);
+   fc.setVerticalFOV (45);
+   fc.setHorizontalFOV (60);
+   fc.setNearPlaneDistance (0.5);
+   fc.setFarPlaneDistance (8.0);
+
+}
+
+template<typename PointInT>
+OcclusionCulling<PointInT>::OcclusionCulling(std::string modelName):
+    model(modelName),
+    fc(true)
+{
+    cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    filtered_cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    cloudCopy = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    FrustumCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+
+//    occlusionFreeCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    std::string path = ros::package::getPath("component_test");
+    pcl::io::loadPCDFile<PointInT> (path+"/src/pcd/"+model, *cloud);
+    cloudCopy->points = cloud->points;
+    voxelRes = 0.5;
+    OriginalVoxelsSize=0.0;
+    id=0.0;
+    voxelFilterOriginal.setInputCloud (cloud);
+    voxelFilterOriginal.setLeafSize (voxelRes, voxelRes, voxelRes);
+    voxelFilterOriginal.initializeVoxelGrid();
+    min_b1 = voxelFilterOriginal.getMinBoxCoordinates ();
+    max_b1 = voxelFilterOriginal.getMaxBoxCoordinates ();
+    for (int kk = min_b1.z (); kk <= max_b1.z (); ++kk)
+    {
+        for (int jj = min_b1.y (); jj <= max_b1.y (); ++jj)
+        {
+            for (int ii = min_b1.x (); ii <= max_b1.x (); ++ii)
+            {
+                Eigen::Vector3i ijk1 (ii, jj, kk);
+                int index1 = voxelFilterOriginal.getCentroidIndexAt (ijk1);
+                if(index1!=-1)
+                {
+                    OriginalVoxelsSize++;
+                }
+
+            }
+        }
+    }
+    pcl::VoxelGrid<PointInT> voxelgrid;
+    voxelgrid.setInputCloud (cloud);
+    voxelgrid.setLeafSize (0.5f, 0.5f, 0.5f);
+    voxelgrid.filter (*filtered_cloud);
+
+    fc.setInputCloud (cloud);
+    fc.setVerticalFOV (45);
+    fc.setHorizontalFOV (58);
+    fc.setNearPlaneDistance (0.7);
+    fc.setFarPlaneDistance (6.0);
+
+}
+
+template<typename PointInT>
+OcclusionCulling<PointInT>::OcclusionCulling():
+    model(NULL),
+    fc(true)
+{
+    cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    filtered_cloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    cloudCopy = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);    
+    FrustumCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+
+//    occlusionFreeCloud = pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
+    std::string path = ros::package::getPath("component_test");
+    pcl::io::loadPCDFile<PointInT> (path+"/src/pcd/scaled_desktop.pcd", *cloud);
+    cloudCopy->points = cloud->points;
+    voxelRes = 0.5;
+    OriginalVoxelsSize=0.0;
+    id=0.0;
+    voxelFilterOriginal.setInputCloud (cloud);
+    voxelFilterOriginal.setLeafSize (voxelRes, voxelRes, voxelRes);
+    voxelFilterOriginal.initializeVoxelGrid();
+    min_b1 = voxelFilterOriginal.getMinBoxCoordinates ();
+    max_b1 = voxelFilterOriginal.getMaxBoxCoordinates ();
+    for (int kk = min_b1.z (); kk <= max_b1.z (); ++kk)
+    {
+        for (int jj = min_b1.y (); jj <= max_b1.y (); ++jj)
+        {
+            for (int ii = min_b1.x (); ii <= max_b1.x (); ++ii)
+            {
+                Eigen::Vector3i ijk1 (ii, jj, kk);
+                int index1 = voxelFilterOriginal.getCentroidIndexAt (ijk1);
+                if(index1!=-1)
+                {
+                    OriginalVoxelsSize++;
+                }
+
+            }
+        }
+    }
+    pcl::VoxelGrid<PointInT> voxelgrid;
+    voxelgrid.setInputCloud (cloud);
+    voxelgrid.setLeafSize (0.5f, 0.5f, 0.5f);
+    voxelgrid.filter (*filtered_cloud);
+
+    fc.setInputCloud (cloud);
+    fc.setVerticalFOV (45);
+    fc.setHorizontalFOV (58);
+    fc.setNearPlaneDistance (0.7);
+    fc.setFarPlaneDistance (6.0);
+}
+*/
+template<typename PointInT>
+OcclusionCulling<PointInT>::~OcclusionCulling()
 {
 }
 
-pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface(geometry_msgs::Pose location)
+template<typename PointInT>
+pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geometry_msgs::Pose location)
 {
-    ROS_INFO ("extractColoredVisibleSurface \n" ) ;
+    ROS_INFO ("extractVisibleSurface \n" ) ;
     std::cout << "location: " << location.position.x << " " <<location.position.y << " " <<location.position.z << std::endl << std::flush ;
 
     //    // 1 *****Frustum Culling*******
-    pcl::PointCloud <pcl::PointXYZRGB>::Ptr output (new pcl::PointCloud <pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr occlusionFreeCloud_local(new pcl::PointCloud<pcl::PointXYZRGB>);
+    typename pcl::PointCloud<PointInT>::Ptr output (new pcl::PointCloud <PointInT>);
+    typename pcl::PointCloud<PointInT>::Ptr occlusionFreeCloud_local(new pcl::PointCloud<PointInT>);
 
     Eigen::Matrix4f camera_pose;
     Eigen::Matrix3d Rd;
@@ -82,7 +243,7 @@ pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface
 
     fc.setCameraPose (camera_pose);
     ros::Time tic = ros::Time::now();
-    fc.filter (*output);
+    fc.filter(*output);
     ros::Time toc = ros::Time::now();
     std::cout<<"\nFrustum Filter took:"<< toc.toSec() - tic.toSec() << std::endl << std::flush;
     ROS_INFO ("frustum size %d \n" , output->size() ) ;
@@ -92,7 +253,7 @@ pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface
     Eigen::Quaternionf quat(qt.w(),qt.x(),qt.y(),qt.z());
     output->sensor_origin_  = Eigen::Vector4f(T[0],T[1],T[2],0);
     output->sensor_orientation_= quat;
-    pcl::VoxelGridOcclusionEstimationT voxelFilter;
+    pcl::VoxelGridOcclusionEstimationT<PointInT> voxelFilter;
     voxelFilter.setInputCloud (output);
     voxelFilter.setLeafSize (0.1f, 0.1f, 0.1f);
     //voxelFilter.setLeafSize (1.0f, 1.0f, 1.0f);
@@ -103,8 +264,8 @@ pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface
     std::cout<<"\nVoxel Filter took:"<< toc.toSec() - tic.toSec() << std::endl << std::flush;
 
     int state,ret;
-    pcl::PointXYZRGB p1,p2;
-    pcl::PointXYZRGB point;
+    PointInT p1,p2;
+    PointInT point;
     std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> > out_ray;
     //std::vector<geometry_msgs::Point> lineSegments;
     //geometry_msgs::Point linePoint;
@@ -118,9 +279,8 @@ pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface
     toc = ros::Time::now();
     std::cout<<"\nocclusionEstimationAll took:"<< toc.toSec() - tic.toSec() << std::endl << std::flush;
     
-    typedef pcl::PointXYZRGB PointT;
-    typedef pcl::PointCloud<PointT> CloudT;
-    CloudT::Ptr occ_centroids (new CloudT);
+    typedef pcl::PointCloud<PointInT> CloudT;
+    typename CloudT::Ptr occ_centroids (new CloudT);
     occ_centroids->width = static_cast<int> (occluded_voxels.size ());
     occ_centroids->height = 1;
     occ_centroids->is_dense = false;
@@ -128,7 +288,7 @@ pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface
     for (size_t i = 0; i < occluded_voxels.size (); ++i)
     {
         Eigen::Vector4f xyz = voxelFilter.getCentroidCoordinate (occluded_voxels[i]);
-        PointT point;
+        PointInT point;
         point.x = xyz[0];
         point.y = xyz[1];
         point.z = xyz[2];
@@ -137,7 +297,7 @@ pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface
     std::cout<<"\nSize of Occluded points:"<<occ_centroids->points.size();fflush(stdout);
     for ( int i = 0; i < (int)output->points.size(); i ++ )
     {
-        pcl::PointXYZRGB ptest = output->points[i];
+        PointInT ptest = output->points[i];
         //std::cout << "ptest" << ptest.x << "   ptest"<< (int)ptest.r <<  "   ptest"<< (int)ptest.g <<std::endl;
         Eigen::Vector3i ijk = voxelFilter.getGridCoordinates( ptest.x, ptest.y, ptest.z);
         // process all free voxels
@@ -147,7 +307,7 @@ pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface
             continue;
         }        
         Eigen::Vector4f centroid = voxelFilter.getCentroidCoordinate (ijk);
-        point = pcl::PointXYZRGB(0,244,0);
+        point = PointInT(0,244,0);
         point.x = centroid[0];
         point.y = centroid[1];
         point.z = centroid[2];
@@ -190,7 +350,7 @@ pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface
                 //                for(uint j=0; j< out_ray.size(); j++)
                 //                {
                 //                    Eigen::Vector4f centroid = voxelFilter.getCentroidCoordinate (out_ray[j]);
-                //                    pcl::PointXYZRGB p = pcl::PointXYZRGB(255,255,0);
+                //                    PointInT p = PointInT(255,255,0);
                 //                    p.x = centroid[0];
                 //                    p.y = centroid[1];
                 //                    p.z = centroid[2];
@@ -219,5 +379,3 @@ pcl::PointCloud<pcl::PointXYZRGB> OcclusionCulling::extractColoredVisibleSurface
     std::cout<<"\nSize of Free points:"<<FreeCloud.points.size();fflush(stdout);
     return FreeCloud ;
 }
-
-

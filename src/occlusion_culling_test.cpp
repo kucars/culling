@@ -34,7 +34,7 @@
 //#include <voxel_grid_occlusion_estimation.h>
 //#include "fcl_utility.h"
 #include <pcl/filters/voxel_grid.h>
-#include <usar_exploration/occlusion_culling.h>
+#include <culling/occlusion_culling.h>
 
 // octomap
 #include <octomap_msgs/Octomap.h>
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     pcl::io::loadPCDFile<pcl::PointXYZRGB> (path+"/resources/pcd/house_colored4.pcd", *originalCloud); // for visualization
 
    // OcclusionCulling occlusionCulling(n,"semantic_area6.pcd");
-    OcclusionCulling occlusionCulling(n,"house_colored4.pcd");
+    OcclusionCulling<pcl::PointXYZRGB> occlusionCulling(n,"house_colored4.pcd");
 
     // read positiongs from txt file
     // only add the start position
@@ -177,7 +177,7 @@ int main(int argc, char **argv)
         ros::Time tic = ros::Time::now();
 
         ///////////////////////////////////////////////////////////////
-        tempCloud = occlusionCulling.extractColoredVisibleSurface(c);
+        tempCloud = occlusionCulling.extractVisibleSurface(c);
         ////////////////////////////////////////////////////////////////
 
         ros::Time toc = ros::Time::now();
