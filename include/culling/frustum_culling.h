@@ -34,6 +34,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#ifndef FRUSTUM_CULLING_H_
+#define FRUSTUM_CULLING_H_
 
 #include <pcl/point_types.h>
 #include <pcl/filters/filter_indices.h>
@@ -239,3 +241,5 @@ namespace pcl
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   };
 }
+#include "culling/frustum_culling.hpp"
+#endif

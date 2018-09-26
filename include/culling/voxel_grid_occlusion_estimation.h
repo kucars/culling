@@ -37,6 +37,8 @@
  * Email  : potthast@usc.edu
  *
  */
+#ifndef VOXEL_GRID_OCCLUSION_ESTIMATION_H_
+#define VOXEL_GRID_OCCLUSION_ESTIMATION_H_
 
 #include <pcl/filters/voxel_grid.h>
 
@@ -248,3 +250,5 @@ namespace pcl
       PointCloud filtered_cloud_;
   };
 }
+#include "culling/voxel_grid_occlusion_estimation.hpp"
+#endif

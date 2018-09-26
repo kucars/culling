@@ -74,13 +74,13 @@ public:
     double maxAccuracyError, minAccuracyError;
     bool AccuracyMaxSet;
     std::string frame_id;
-
+   
     //methods
     OcclusionCulling(ros::NodeHandle & n, std::string modelName);
     //OcclusionCulling(ros::NodeHandle & n, typename pcl::PointCloud<PointInT>::Ptr& cloudPtr);
     //OcclusionCulling(std::string modelName);
     //OcclusionCulling();
-    ~OcclusionCulling();
+    //~OcclusionCulling();
     pcl::PointCloud<PointInT> extractVisibleSurface(geometry_msgs::Pose location);
     //    float calcCoveragePercent(geometry_msgs::Pose location);
     float calcCoveragePercent(typename pcl::PointCloud<PointInT>::Ptr cloud_filtered);
@@ -94,4 +94,5 @@ public:
     bool contains(pcl::PointCloud<PointInT> c, PointInT p);
     pcl::PointCloud<PointInT> pointsDifference(pcl::PointCloud<PointInT> c2);
 };
+#include "culling/occlusion_culling.hpp"
 #endif

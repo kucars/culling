@@ -44,7 +44,9 @@ include_directories(include
   ${OCTOMAP_INCLUDE_DIRS}
 )
 
-if (CUDA_FOUND)
+set(CUDA_FOUND false)
+
+if(CUDA_FOUND)
   message(STATUS "CUDA Version: ${CUDA_VERSION_STRINGS}")
   message(STATUS "CUDA Libararies: ${CUDA_LIBRARIES}")
   set(
@@ -66,13 +68,27 @@ if (CUDA_FOUND)
 
 endif()
 
-add_executable(occlusion_culling_test 
-              src/occlusion_culling_test.cpp 
+add_library(occlusion_culling 
               src/occlusion_culling.cpp
               src/voxel_grid_occlusion_estimation.cpp
-              src/frustum_culling.cpp)
-add_dependencies(occlusion_culling_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(occlusion_culling_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${fcl_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OCTOMAP_LIBRARIES} ${LIBFCL_LIBRARIES})
+              src/frustum_culling.cpp
+            )
+target_link_libraries(occlusion_culling ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(occlusion_culling_test src/occlusion_culling_test.cpp)
+#add_dependencies(occlusion_culling_test ${catkin_EXPORTED_TARGETS})
+target_link_libraries(
+      occlusion_culling_test occlusion_culling 
+      ${catkin_LIBRARIES}
+    )
+
+#add_executable(occlusion_culling_test 
+#              src/occlusion_culling_test.cpp 
+#              src/occlusion_culling.cpp
+#              src/voxel_grid_occlusion_estimation.cpp
+#              src/frustum_culling.cpp)
+#add_dependencies(occlusion_culling_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(occlusion_culling_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${fcl_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OCTOMAP_LIBRARIES} ${LIBFCL_LIBRARIES})
 
 #add_executable (voxel_grid_occlusion_estimation_test src/voxel_grid_occlusion_estimation_test.cpp)
 #target_link_libraries(voxel_grid_occlusion_estimation_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${fcl_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OCTOMAP_LIBRARIES} ${LIBFCL_LIBRARIES})
