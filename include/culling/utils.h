@@ -1,14 +1,7 @@
 /****************************************************************************************
- *   Copyright (C) 2015 - 2017 by                                                       *
+ *   Copyright (C) 2015 - 2018 by                                                       *
  *      Tarek Taha, KURI  <tataha@tarektaha.com>                                        *
- *      Randa Almadhoun   <randa.almadhoun@kustar.ac.ae>                                *
  *                                                                                      *
- *      The package was modified by Reem Ashour as follows:                         	*
- *      1-  All functions were modified to deal with XYZRGB points instead of XYZ   	*
- *      2-  Parameters were changed to work with environment exploration
- *      3-  Coverage caluation function's were removed                              	*
- *      Reem Ashour <reem.ashour@ku.ac.ae>                                	        *
- *
  *   This program is free software; you can redistribute it and/or modify               *
  *   it under the terms of the GNU General Public License as published by               *
  *   the Free Software Foundation; either version 2 of the License, or                  *
@@ -24,5 +17,34 @@
  *   Free Software Foundation, Inc.,                                                    *
  *   51 Franklin Steet, Fifth Floor, Boston, MA  02111-1307, USA.                       *
  ****************************************************************************************/
-#include "culling/occlusion_culling.h"
-#include "culling/occlusion_culling.hpp"
+#include <geometry_msgs/Pose.h>
+#include <eigen_conversions/eigen_msg.h>
+#include <Eigen/Geometry>
+#include <tf/tf.h>
+#include <tf_conversions/tf_eigen.h>
+#ifndef UTILS_H_
+#define UTILS_H_
+
+Eigen::Matrix4f sensor2RobotTransform(geometry_msgs::Pose location)
+{
+    tf::Quaternion qt;
+    Eigen::Matrix4f sensorPose;
+    Eigen::Matrix3d Rd;
+    Eigen::Matrix3f Rf;
+    sensorPose.setZero();
+    qt.setX(location.orientation.x);
+    qt.setY(location.orientation.y);
+    qt.setZ(location.orientation.z);
+    qt.setW(location.orientation.w);
+    tf::Matrix3x3 R_tf(qt);
+    tf::matrixTFToEigen(R_tf,Rd);
+    Rf = Rd.cast<float>();
+    sensorPose.block (0, 0, 3, 3) = Rf;
+    Eigen::Vector3f T;
+    T(0) = location.position.x; T(1) = location.position.y; T(2) = location.position.z;
+    sensorPose.block(0, 3, 3, 1) = T;
+    sensorPose(3, 3) = 1;
+    return sensorPose;
+}
+
+#endif

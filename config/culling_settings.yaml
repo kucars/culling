@@ -1,9 +1,11 @@
 ####################
 ## Culling settings
 ####################
-pcd_input_file: sphere_verydensed.pcd
+pcd_input_file: house_colored4.pcd
 viewpoints_file: viewpoints.txt
-voxel_res: 0.1
+voxel_res: 0.5
+leaf_size: 0.1
+frame_id: world
 
 ####################
 ## Sensor Position - In reference to body frame
@@ -17,4 +19,4 @@ sensor_z: -0.055
 sensor_hor_fov: 60
 sensor_ver_fov: 45
 sensor_near_limit: 0.5
-sensor_far_limit: 8.0
+sensor_far_limit: 5.0

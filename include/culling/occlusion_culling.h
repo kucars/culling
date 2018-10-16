@@ -46,13 +46,14 @@
 #include <culling/voxel_grid_occlusion_estimation.h>
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/PoseArray.h>
+#include "utils.h"
 
 template<typename PointInT>
 class OcclusionCulling
 {
 public:
     ros::NodeHandle  nh;
-    std::string model;
+    std::string model,frameId;
     ros::Publisher sensor_fov_pub;
 
     typename pcl::PointCloud<PointInT>::Ptr cloud;
@@ -64,7 +65,7 @@ public:
 
     pcl::PointCloud<PointInT> freeCloud;
     double voxelRes, originalVoxelsSize;
-    double sensorHorFOV, sensorVerFOV, sensorNearLimit, sensorFarLimit;
+    double sensorHorFOV, sensorVerFOV, sensorNearLimit, sensorFarLimit,leafSize;
     double id;
     pcl::VoxelGridOcclusionEstimationT<PointInT> voxelFilterOriginal;
     Eigen::Vector3i  max_b1, min_b1;
@@ -73,7 +74,6 @@ public:
     pcl::FrustumCullingTT<PointInT> fc;
     double maxAccuracyError, minAccuracyError;
     bool AccuracyMaxSet;
-    std::string frame_id;
    
     //methods
     OcclusionCulling(ros::NodeHandle & n, std::string modelName);

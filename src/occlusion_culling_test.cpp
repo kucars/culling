@@ -58,15 +58,15 @@ typedef pcl::PointCloud<pointType> PointCloud;
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "occlusion_culling_test");
-    ros::NodeHandle n;
+    ros::NodeHandle nh;
 
-    ros::Publisher originalCloudPub             = n.advertise<sensor_msgs::PointCloud2>("original_pointcloud", 100);
-    ros::Publisher occludedCloudPub             = n.advertise<sensor_msgs::PointCloud2>("occluded_pointcloud", 100);
-    ros::Publisher frustumCloudPub              = n.advertise<sensor_msgs::PointCloud2>("frustum_pointcloud", 100);
-    ros::Publisher currentPosePub               = n.advertise<geometry_msgs::PoseStamped>("currentPose", 100);
-    ros::Publisher sensorPosePub                = n.advertise<geometry_msgs::PoseArray>("sensor_pose", 10);
-    ros::Publisher generagedPathPub             = n.advertise<visualization_msgs::Marker>("generated_path", 10);
-    ros::Publisher sensorFovPub                 = n.advertise<visualization_msgs::MarkerArray>("sensor_fov", 100);
+    ros::Publisher originalCloudPub             = nh.advertise<sensor_msgs::PointCloud2>("original_pointcloud", 100);
+    ros::Publisher occludedCloudPub             = nh.advertise<sensor_msgs::PointCloud2>("occluded_pointcloud", 100);
+    ros::Publisher frustumCloudPub              = nh.advertise<sensor_msgs::PointCloud2>("frustum_pointcloud", 100);
+    ros::Publisher currentPosePub               = nh.advertise<geometry_msgs::PoseStamped>("currentPose", 100);
+    ros::Publisher sensorPosePub                = nh.advertise<geometry_msgs::PoseArray>("sensor_pose", 10);
+    ros::Publisher generagedPathPub             = nh.advertise<visualization_msgs::Marker>("generated_path", 10);
+    ros::Publisher sensorFovPub                 = nh.advertise<visualization_msgs::MarkerArray>("sensor_fov", 100);
     PointCloud occludedCloud;
     PointCloud frustumCloud;
 
@@ -77,15 +77,15 @@ int main(int argc, char **argv)
     std::string pcdFileName,viewpointsFile;
     double sensor_roll, sensor_pitch, sensor_yaw, sensor_x, sensor_y, sensor_z;
     // Load Params
-    ros::param::param("~pcd_input_file", pcdFileName, std::string("sphere_verydensed.pcd"));
-    ros::param::param("~viewpoints_file", viewpointsFile, std::string("viewpoints.txt"));
+    nh.param<std::string>("pcd_input_file", pcdFileName, std::string("sphere_verydensed.pcd"));
+    nh.param<std::string>("viewpoints_file", viewpointsFile, std::string("viewpoints.txt"));
 
-    ros::param::param("~sensor_roll", sensor_roll, 0.0);
-    ros::param::param("~sensor_pitch", sensor_pitch, 0.0);
-    ros::param::param("~sensor_yaw", sensor_yaw, 0.0);
-    ros::param::param("~sensor_x", sensor_x, 0.0);
-    ros::param::param("~sensor_y", sensor_y, 0.0);
-    ros::param::param("~sensor_z", sensor_z, 0.0);
+    nh.param<double>("sensor_roll", sensor_roll, 0.0);
+    nh.param<double>("sensor_pitch", sensor_pitch, 0.0);
+    nh.param<double>("sensor_yaw", sensor_yaw, 0.0);
+    nh.param<double>("sensor_x", sensor_x, 0.0);
+    nh.param<double>("sensor_y", sensor_y, 0.0);
+    nh.param<double>("sensor_z", sensor_z, 0.0);
 
     std::vector<double> rpy;
     rpy.push_back(sensor_roll);
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
         fclose(file);
     }
 
-    OcclusionCulling<pointType> occlusionCulling(n,pcdFilePath);
+    OcclusionCulling<pointType> occlusionCulling(nh,pcdFilePath);
     while (!feof(file))
     {
         fscanf(file,"%lf %lf %lf %lf\n",&locationx,&locationy,&locationz,&yaw);
