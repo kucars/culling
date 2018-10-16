@@ -1,0 +1,20 @@
+####################
+## Culling settings
+####################
+pcd_input_file: sphere_verydensed.pcd
+viewpoints_file: viewpoints.txt
+voxel_res: 0.1
+
+####################
+## Sensor Position - In reference to body frame
+####################
+sensor_roll: 0
+sensor_pitch: 0.093
+sensor_yaw: 0
+sensor_x: 0
+sensor_y: 0
+sensor_z: -0.055
+sensor_hor_fov: 60
+sensor_ver_fov: 45
+sensor_near_limit: 0.5
+sensor_far_limit: 8.0

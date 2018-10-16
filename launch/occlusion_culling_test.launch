@@ -1,0 +1,7 @@
+<launch>
+    <arg name="culling_settings_file" default="$(find culling)/config/culling_settings.yaml"/>
+    <rosparam file="$(arg culling_settings_file)" command="load" />
+    <node pkg="culling" name="occlusion_culling_test" type="occlusion_culling_test" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find culling)/rviz/culling.rviz"/>
+</launch>
+ 

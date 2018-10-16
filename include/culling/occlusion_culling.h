@@ -53,18 +53,18 @@ class OcclusionCulling
 public:
     ros::NodeHandle  nh;
     std::string model;
-    //     ros::Publisher original_pub;
-    //     ros::Publisher visible_pub;
-    ros::Publisher fov_pub;
+    ros::Publisher sensor_fov_pub;
+
     typename pcl::PointCloud<PointInT>::Ptr cloud;
     typename pcl::PointCloud<PointInT>::Ptr cloudCopy;
-    typename pcl::PointCloud<PointInT>::Ptr filtered_cloud;
+    typename pcl::PointCloud<PointInT>::Ptr filteredCloud;
     typename pcl::PointCloud<PointInT>::Ptr occlusionFreeCloud;
-    typename pcl::PointCloud<PointInT>::Ptr FrustumCloud;
+    typename pcl::PointCloud<PointInT>::Ptr frustumCloud;
     typename pcl::PointCloud<PointInT>::Ptr rayCloud ;
 
-    pcl::PointCloud<PointInT> FreeCloud;
-    float voxelRes, OriginalVoxelsSize;
+    pcl::PointCloud<PointInT> freeCloud;
+    double voxelRes, originalVoxelsSize;
+    double sensorHorFOV, sensorVerFOV, sensorNearLimit, sensorFarLimit;
     double id;
     pcl::VoxelGridOcclusionEstimationT<PointInT> voxelFilterOriginal;
     Eigen::Vector3i  max_b1, min_b1;
@@ -77,12 +77,12 @@ public:
    
     //methods
     OcclusionCulling(ros::NodeHandle & n, std::string modelName);
-    //OcclusionCulling(ros::NodeHandle & n, typename pcl::PointCloud<PointInT>::Ptr& cloudPtr);
-    //OcclusionCulling(std::string modelName);
-    //OcclusionCulling();
-    //~OcclusionCulling();
+    OcclusionCulling(ros::NodeHandle & n, typename pcl::PointCloud<PointInT>::Ptr& cloudPtr);
+    ~OcclusionCulling();
+
     pcl::PointCloud<PointInT> extractVisibleSurface(geometry_msgs::Pose location);
     //    float calcCoveragePercent(geometry_msgs::Pose location);
+    void initialize();
     float calcCoveragePercent(typename pcl::PointCloud<PointInT>::Ptr cloud_filtered);
     double calcAvgAccuracy(pcl::PointCloud<PointInT> pointCloud);
     double calcAvgAccuracy(pcl::PointCloud<PointInT> pointCloud, geometry_msgs::Pose cameraPose);
