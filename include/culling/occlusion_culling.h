@@ -81,6 +81,7 @@ public:
     ~OcclusionCulling();
 
     pcl::PointCloud<PointInT> extractVisibleSurface(geometry_msgs::Pose location);
+    pcl::PointCloud<PointInT> getFrustumCloud();
     //    float calcCoveragePercent(geometry_msgs::Pose location);
     void initialize();
     float calcCoveragePercent(typename pcl::PointCloud<PointInT>::Ptr cloud_filtered);

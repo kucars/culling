@@ -31,10 +31,9 @@
 #include <pcl/common/eigen.h>
 #include <pcl/common/transforms.h>
 #include <pcl/range_image/range_image.h>
-//#include <voxel_grid_occlusion_estimation.h>
-//#include "fcl_utility.h"
 #include <pcl/filters/voxel_grid.h>
 #include <culling/occlusion_culling.h>
+#include <culling/utils.h>
 
 // octomap
 #include <octomap_msgs/Octomap.h>
@@ -46,13 +45,9 @@
 #include <string>
 using namespace std;
 using namespace octomap;
-//using namespace fcl;
 
-visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, int c_color, double scale);
-geometry_msgs::Pose uav2camTransformation(geometry_msgs::Pose pose, std::vector<double> rpy, std::vector<double> xyz);
-
-//typedef pcl::PointXYZRGB pointType;
-typedef pcl::PointXYZ pointType;
+typedef pcl::PointXYZRGB pointType;
+//typedef pcl::PointXYZ pointType;
 typedef pcl::PointCloud<pointType> PointCloud;
 
 int main(int argc, char **argv)
@@ -76,10 +71,10 @@ int main(int argc, char **argv)
 
     std::string pcdFileName,viewpointsFile;
     double sensor_roll, sensor_pitch, sensor_yaw, sensor_x, sensor_y, sensor_z;
+
     // Load Params
     nh.param<std::string>("pcd_input_file", pcdFileName, std::string("sphere_verydensed.pcd"));
     nh.param<std::string>("viewpoints_file", viewpointsFile, std::string("viewpoints.txt"));
-
     nh.param<double>("sensor_roll", sensor_roll, 0.0);
     nh.param<double>("sensor_pitch", sensor_pitch, 0.0);
     nh.param<double>("sensor_yaw", sensor_yaw, 0.0);
@@ -87,15 +82,15 @@ int main(int argc, char **argv)
     nh.param<double>("sensor_y", sensor_y, 0.0);
     nh.param<double>("sensor_z", sensor_z, 0.0);
 
-    std::vector<double> rpy;
-    rpy.push_back(sensor_roll);
-    rpy.push_back(sensor_pitch);
-    rpy.push_back(sensor_yaw);
+    std::vector<double> sensorRPY2Robot;
+    sensorRPY2Robot.push_back(sensor_roll);
+    sensorRPY2Robot.push_back(sensor_pitch);
+    sensorRPY2Robot.push_back(sensor_yaw);
 
-    std::vector<double> xyz;
-    xyz.push_back(sensor_x);
-    xyz.push_back(sensor_y);
-    xyz.push_back(sensor_z);
+    std::vector<double> sensorXYZ2Robot;
+    sensorXYZ2Robot.push_back(sensor_x);
+    sensorXYZ2Robot.push_back(sensor_y);
+    sensorXYZ2Robot.push_back(sensor_z);
 
     std::string path = ros::package::getPath("culling");
     std::string pcdFilePath = path + "/data/pcd/" + pcdFileName;
@@ -107,7 +102,7 @@ int main(int argc, char **argv)
 
     double locationx,locationy,locationz,yaw;
     geometry_msgs::PoseArray viewpoints;
-    geometry_msgs::PoseStamped loc;
+    geometry_msgs::PoseStamped robotLocation;
     double viewPointCount=0;
     double timeSum=0;
 
@@ -122,69 +117,28 @@ int main(int argc, char **argv)
     while (!feof(file))
     {
         fscanf(file,"%lf %lf %lf %lf\n",&locationx,&locationy,&locationz,&yaw);
-        std::cout << "location in test: " << locationx << " " << locationy << " " << locationz << std::endl ;
-        loc.pose.position.x = locationx;
-        loc.pose.position.y = locationy;
-        loc.pose.position.z = locationz;
+        std::cout << "Robot location : " << locationx << " " << locationy << " " << locationz << std::endl ;
+        robotLocation.pose.position.x = locationx;
+        robotLocation.pose.position.y = locationy;
+        robotLocation.pose.position.z = locationz;
         tf::Quaternion tf_q ;
         tf_q = tf::createQuaternionFromYaw(yaw);
-        loc.pose.orientation.x =tf_q.getX();
-        loc.pose.orientation.y = tf_q.getY();
-        loc.pose.orientation.z = tf_q.getZ();
-        loc.pose.orientation.w =tf_q.getW();
-        loc.header.frame_id="world";
-        currentPosePub.publish(loc);
-        viewpoints.poses.push_back(loc.pose);
+        robotLocation.pose.orientation.x = tf_q.getX();
+        robotLocation.pose.orientation.y = tf_q.getY();
+        robotLocation.pose.orientation.z = tf_q.getZ();
+        robotLocation.pose.orientation.w = tf_q.getW();
+        robotLocation.header.frame_id="world";
+        currentPosePub.publish(robotLocation);
+        viewpoints.poses.push_back(robotLocation.pose);
 
-        geometry_msgs::Pose pt;
-        pt.position.x = locationx;
-        pt.position.y = locationy;
-        pt.position.z = locationz;
-        tf::Quaternion tf_q2 ;
-        tf_q2 = tf::createQuaternionFromYaw(yaw);
-        pt.orientation.x = tf_q2.getX();
-        pt.orientation.y = tf_q2.getY();
-        pt.orientation.z = tf_q2.getZ();
-        pt.orientation.w = tf_q2.getW();
-        geometry_msgs::Pose c = uav2camTransformation( pt,  rpy,  xyz);
-
-        ////////////////////////////// Frustum culling - visiualization only //////////////////////////////////////////////////////
-        /*
-        pcl::FrustumCullingTT fc(true);
-        fc.setInputCloud (originalCloud);
-        fc.setVerticalFOV (45);
-        fc.setHorizontalFOV (58);
-        fc.setNearPlaneDistance (0.3);
-        fc.setFarPlaneDistance (3.0);
-        Eigen::Matrix4f camera_pose;
-        Eigen::Matrix3d Rd;
-        Eigen::Matrix3f Rf;
-        camera_pose.setZero();
-        tf::Quaternion qt;
-        qt.setX(loc.pose.orientation.x);
-        qt.setY(loc.pose.orientation.y);
-        qt.setZ(loc.pose.orientation.z);
-        qt.setW(loc.pose.orientation.w);
-        tf::Matrix3x3 R_tf(qt);
-        tf::matrixTFToEigen(R_tf,Rd);
-        Rf = Rd.cast<float>();
-        camera_pose.block (0, 0, 3, 3) = Rf;
-        Eigen::Vector3f T;
-        T (0) = loc.pose.position.x; T (1) = loc.pose.position.y; T (2) = loc.pose.position.z;
-        camera_pose.block (0, 3, 3, 1) = T;
-        camera_pose (3, 3) = 1;
-        fc.setCameraPose (camera_pose);
-        fc.filter (*FrustumCloud);
-        */
-        ///////////////////////////////////////////////////////////////////////////
-        // 2 *****Occlusion Culling*******
-
+        geometry_msgs::Pose c = uav2camTransformation(robotLocation.pose, sensorRPY2Robot, sensorXYZ2Robot);
 
         PointCloud tempCloud;
         ros::Time tic = ros::Time::now();
 
         ///////////////////////////////////////////////////////////////
-        tempCloud = occlusionCulling.extractVisibleSurface(c);
+        tempCloud    = occlusionCulling.extractVisibleSurface(c);
+        frustumCloud = occlusionCulling.getFrustumCloud();
         ////////////////////////////////////////////////////////////////
 
         ros::Time toc = ros::Time::now();
@@ -256,90 +210,4 @@ int main(int argc, char **argv)
         loop_rate.sleep();
     }
     return 0;
-}
-
-visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, int c_color, double scale)
-{
-    visualization_msgs::Marker linksMarkerMsg;
-    linksMarkerMsg.header.frame_id="world";
-    linksMarkerMsg.header.stamp=ros::Time::now();
-    linksMarkerMsg.ns="link_marker";
-    linksMarkerMsg.id = 0;
-    linksMarkerMsg.type = visualization_msgs::Marker::LINE_LIST;
-    linksMarkerMsg.scale.x = scale;
-    linksMarkerMsg.action  = visualization_msgs::Marker::ADD;
-    linksMarkerMsg.lifetime  = ros::Duration(10000.0);
-    std_msgs::ColorRGBA color;
-    //    color.r = 1.0f; color.g=.0f; color.b=.0f, color.a=1.0f;
-    if(c_color == 1)
-    {
-        color.r = 1.0;
-        color.g = 0.0;
-        color.b = 0.0;
-        color.a = 1.0;
-    }
-    else if(c_color == 2)
-    {
-        color.r = 0.0;
-        color.g = 1.0;
-        color.b = 0.0;
-        color.a = 1.0;
-    }
-    else
-    {
-        color.r = 0.0;
-        color.g = 0.0;
-        color.b = 1.0;
-        color.a = 1.0;
-    }
-    std::vector<geometry_msgs::Point>::iterator linksIterator;
-    for(linksIterator = links.begin();linksIterator != links.end();linksIterator++)
-    {
-        linksMarkerMsg.points.push_back(*linksIterator);
-        linksMarkerMsg.colors.push_back(color);
-    }
-    return linksMarkerMsg;
-}
-
-geometry_msgs::Pose uav2camTransformation(geometry_msgs::Pose pose, std::vector<double> rpy, std::vector<double> xyz)
-{
-    Eigen::Matrix4d uav_pose, uav2cam, cam_pose;
-    //UAV matrix pose
-    Eigen::Matrix3d R; Eigen::Vector3d T1(pose.position.x,pose.position.y,pose.position.z);
-    tf::Quaternion qt(pose.orientation.x,pose.orientation.y,pose.orientation.z,pose.orientation.w);
-    tf::Matrix3x3 R1(qt);
-    tf::matrixTFToEigen(R1,R);
-    uav_pose.setZero ();
-    uav_pose.block (0, 0, 3, 3) = R;
-    uav_pose.block (0, 3, 3, 1) = T1;
-    uav_pose (3, 3) = 1;
-
-    //transformation matrix
-    qt = tf::createQuaternionFromRPY(rpy[0],rpy[1],rpy[2]);
-    tf::Matrix3x3 R2(qt);Eigen::Vector3d T2(xyz[0],xyz[1],xyz[2]);
-    tf::matrixTFToEigen(R2,R);
-    uav2cam.setZero ();
-    uav2cam.block (0, 0, 3, 3) = R;
-    uav2cam.block (0, 3, 3, 1) = T2;
-    uav2cam (3, 3) = 1;
-
-    //preform the transformation
-    cam_pose = uav_pose * uav2cam;
-
-    Eigen::Matrix4d cam2cam;
-    //the transofrmation is rotation by +90 around x axis of the camera
-    cam2cam <<   1, 0, 0, 0,
-            0, 0,-1, 0,
-            0, 1, 0, 0,
-            0, 0, 0, 1;
-    Eigen::Matrix4d cam_pose_new = cam_pose * cam2cam;
-    geometry_msgs::Pose p;
-    Eigen::Vector3d T3;Eigen::Matrix3d Rd; tf::Matrix3x3 R3;
-    Rd = cam_pose_new.block (0, 0, 3, 3);
-    tf::matrixEigenToTF(Rd,R3);
-    T3 = cam_pose_new.block (0, 3, 3, 1);
-    p.position.x=T3[0];p.position.y=T3[1];p.position.z=T3[2];
-    R3.getRotation(qt);
-    p.orientation.x = qt.getX(); p.orientation.y = qt.getY();p.orientation.z = qt.getZ();p.orientation.w = qt.getW();
-    return p;
 }

@@ -119,6 +119,12 @@ OcclusionCulling<PointInT>::~OcclusionCulling()
 }
 
 template<typename PointInT>
+pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::getFrustumCloud()
+{
+    return *frustumCloud;
+}
+
+template<typename PointInT>
 pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geometry_msgs::Pose location)
 {
     ROS_INFO("ExtractVisibleSurface \n" );
@@ -136,9 +142,12 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
     ros::Time toc = ros::Time::now();
     std::cout<<"\nFrustum Filter took:"<< toc.toSec() - tic.toSec() << std::endl << std::flush;
     ROS_INFO ("Cloud input size:%d Frustum size:%d \n",cloud->points.size(), output->size()) ;
-    fflush(stdout);
 
-    //2:****voxel grid occlusion estimation *****
+    frustumCloud->header              = output->header;
+    frustumCloud->sensor_origin_      = output->sensor_origin_;
+    frustumCloud->sensor_orientation_ = output->sensor_orientation_;
+ 
+    //2:****voxel grid occlusion estimation (occlusion culling) *****
     tf::Quaternion qt;
     Eigen::Vector3f T;
     qt.setX(location.orientation.x);
@@ -147,7 +156,7 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
     qt.setW(location.orientation.w);    
     Eigen::Quaternionf quat(qt.w(),qt.x(),qt.y(),qt.z());
     T(0) = location.position.x; T(1) = location.position.y; T(2) = location.position.z;
-    output->sensor_origin_  = Eigen::Vector4f(T[0],T[1],T[2],0);
+    output->sensor_origin_     = Eigen::Vector4f(T[0],T[1],T[2],0);
     output->sensor_orientation_= quat;
     pcl::VoxelGridOcclusionEstimationT<PointInT> voxelFilter;
     voxelFilter.setInputCloud(output);
@@ -197,7 +206,7 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
 		
          // Direction to target voxel        
         Eigen::Vector4f centroid = voxelFilter.getCentroidCoordinate(ijk);
-        point = PointInT(0, 244, 0);
+        point   = PointInT(0, 244, 0);
         point.x = centroid[0];
         point.y = centroid[1];
         point.z = centroid[2];
@@ -237,29 +246,6 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
 template<typename PointInT>
 void OcclusionCulling<PointInT>::visualizeFOV(geometry_msgs::Pose location)
 {
-    /*
-    typename pcl::PointCloud<PointInT>::Ptr output(new pcl::PointCloud <PointInT>);
-    Eigen::Matrix4f camera_pose;
-    Eigen::Matrix3d Rd;
-    Eigen::Matrix3f Rf;
-    camera_pose.setZero ();
-
-    tf::Quaternion qt;
-    qt.setX(location.orientation.x);
-    qt.setY(location.orientation.y);
-    qt.setZ(location.orientation.z);
-    qt.setW(location.orientation.w);
-    tf::Matrix3x3 R_tf(qt);
-    tf::matrixTFToEigen(R_tf,Rd);
-    Rf = Rd.cast<float>();
-    camera_pose.block (0, 0, 3, 3) = Rf;
-    Eigen::Vector3f T;
-    T (0) = location.position.x; T (1) = location.position.y; T (2) = location.position.z;
-    camera_pose.block (0, 3, 3, 1) = T;
-    camera_pose (3, 3) = 1;
-    fc.setCameraPose (camera_pose);
-    fc.filter(*output);
-    */
     //*** visualization the FOV *****
     std::vector<geometry_msgs::Point> fov_points;
     int c_color[3];
