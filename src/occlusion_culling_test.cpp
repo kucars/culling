@@ -146,13 +146,13 @@ int main(int argc, char **argv)
         ros::Time toc = ros::Time::now();
         double elapsed =  toc.toSec() - tic.toSec();
         timeSum +=elapsed;
-        std::cout<<"\nOcculision Culling duration (s) = "<<elapsed<<"\n";
+        ROS_INFO("Occulision Culling duration (s) = %f",elapsed);
         occludedCloud += tempCloud;
         frustumCloud  += frustumCloud;
         viewPointCount++;
         break;
     }
-    std::cout<<"On Average Occulision Culling takes (s) = "<<timeSum/viewPointCount<<"\n";
+    ROS_INFO("On Average Occulision Culling takes (s) =%f",timeSum/viewPointCount);
     occludedCloudPtr->points = occludedCloud.points;
     frustumCloudPtr->points  = frustumCloud.points ;
 
@@ -175,7 +175,10 @@ int main(int argc, char **argv)
             lineSegments.push_back(p);
         }
     }
-    visualization_msgs::Marker linesList = drawLines(lineSegments,1,0.15);
+    int c_color[3];
+    c_color[0]=1; c_color[1]=0; c_color[2]=1;
+    int id=0;
+    visualization_msgs::Marker linesList = drawLines(lineSegments, id, c_color, frameId, 0.15);
 
 
     // *****************Rviz Visualization ************

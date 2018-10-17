@@ -39,17 +39,21 @@ void OcclusionCulling<PointInT>::initialize()
    filteredCloud      = typename pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
    occlusionFreeCloud = typename pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);
    frustumCloud       = typename pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);   
-   rayCloud           = typename pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud<PointInT>);      
+   rayCloud           = typename pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);      
    cloudCopy          = typename pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);  
+   occupancyGrid      = typename pcl::PointCloud<PointInT>::Ptr(new pcl::PointCloud <PointInT>);  
    cloudCopy->points  = cloud->points;
 
    sensor_fov_pub     = nh.advertise<visualization_msgs::MarkerArray>("sensor_fov", 100);
+   rayPub             = nh.advertise<visualization_msgs::Marker>("ray_casts", 100);
+   occupancyPub       = nh.advertise<sensor_msgs::PointCloud2>("occupancy_grid", 100);
 
    nh.param<double>("voxel_res", voxelRes, 0.1);
    nh.param<double>("sensor_hor_fov", sensorHorFOV, 60.0);
    nh.param<double>("sensor_ver_fov", sensorVerFOV, 45.0);
    nh.param<double>("sensor_near_limit", sensorNearLimit, 0.5);
    nh.param<double>("sensor_far_limit", sensorFarLimit, 8.0);
+   nh.param<bool>("debug_enabled", debugEnabled, false);
    nh.param<std::string>("frame_id", frameId,"world");
 
    ROS_INFO("Voxel Res:%f",voxelRes);
@@ -148,7 +152,7 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
     frustumCloud->sensor_orientation_ = output->sensor_orientation_;
     frustumCloud->points              = output->points;
 
-    //2:****voxel grid occlusion estimation (occlusion culling) *****
+    //****voxel grid occlusion estimation (occlusion culling) *****
     output->sensor_origin_     = Eigen::Vector4f(location.position.x,location.position.y,location.position.z,0);
     output->sensor_orientation_= Eigen::Quaternionf(location.orientation.w,location.orientation.x,location.orientation.y,location.orientation.z);
 
@@ -160,79 +164,99 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
     voxelFilter.initializeVoxelGrid();
     toc = ros::Time::now();
     ROS_INFO("Voxel Filter took:%f",toc.toSec() - tic.toSec());
-    ROS_INFO("Number of points:%d",(int)output->points.size());
+    ROS_INFO("Number of points:%d",output->points.size());
 
-    int state,ret;
+    int occupiedState,ret;
     PointInT p1,p2;
     PointInT point;
-    std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> > out_ray;
-     
-    for (int i = 0; i < (int)output->points.size(); i++)
+    std::vector<geometry_msgs::Point> lineSegments;
+    geometry_msgs::Point linePoint;
+    occupancyGrid->points.clear();    
+    std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> > outRay;
+
+    // iterate over the entire frustum points
+    for(uint i = 0; i<output->points.size(); i++)
     {
         PointInT ptest = output->points[i];
         Eigen::Vector3i ijk = voxelFilter.getGridCoordinates(ptest.x, ptest.y, ptest.z);
-        if (voxelFilter.getCentroidIndexAt(ijk) == -1)
-        {
-            // Voxel is out of bounds
+        
+        // Voxel is out of bounds?
+        if(voxelFilter.getCentroidIndexAt(ijk) == -1)
+        {            
             continue;
         }
-		// >>>>>>>>>>>>>>>>>>>>
-		// 2.1 Perform occlusion estimation
-		// >>>>>>>>>>>>>>>>>>>>
-		
-		/*
-		 * The way this works is it traces a line to the point and finds
-		 * the distance to the first occupied voxel in its path (t_min).
-		 * It then determines if the distance between the target point and
-		 * the collided voxel are close (within voxelRes).
-		 * 
-		 * If they are, the point is visible. Otherwise, the point is behind
-		 * an occluding point
-		 * 
-		 * 
-		 * This is the expected function of the following command:
-		 *   ret = voxelFilter.occlusionEstimation( state,out_ray, ijk);
-		 * 
-		 * However, it sometimes shows occluded points on the edge of the cloud
-		 */
-		
-         // Direction to target voxel        
         Eigen::Vector4f centroid = voxelFilter.getCentroidCoordinate(ijk);
-        point   = PointInT(0, 244, 0);
+        point = PointInT(0,244,0);
         point.x = centroid[0];
         point.y = centroid[1];
         point.z = centroid[2];
-        Eigen::Vector4f direction = centroid - output->sensor_origin_;
-        direction.normalize();
 
-        // Estimate entry point into the voxel grid
-        float tmin = voxelFilter.rayBoxIntersection(output->sensor_origin_, direction, p1, p2);
-
-        if (tmin == -1)
-        {
-            // ray does not intersect with the bounding box
+        outRay.clear();
+        ret = voxelFilter.occlusionEstimation(occupiedState, outRay, ijk);
+        if(ret == -1 || occupiedState == 1)
             continue;
-        }
 
-        // Calculate coordinate of the boundary of the voxel grid
-        Eigen::Vector4f start = output->sensor_origin_ + tmin * direction;
-
-        // Determine distance between boundary and target voxel centroid
-        Eigen::Vector4f dist_vector = centroid - start;
-        float distance = (dist_vector).dot(dist_vector);
-
-        if (distance > voxelRes * 1.414) // voxelRes/sqrt(2)
-        { 
-            // ray does not correspond to this point
-            continue;
-        }
-        // Save point
         occlusionFreeCloud_local->points.push_back(ptest);
+        if (debugEnabled)
+        {
+            // estimate direction to target voxel
+            Eigen::Vector4f direction = centroid - output->sensor_origin_;
+            direction.normalize();
+
+            //estimate entry point into the voxel grid
+            float tmin = voxelFilter.rayBoxIntersection(output->sensor_origin_, direction, p1, p2);
+            if(tmin == -1)
+                continue;
+
+            // coordinate of the boundary of the voxel grid
+            Eigen::Vector4f start = output->sensor_origin_ + tmin * direction;
+            linePoint.x = output->sensor_origin_[0];
+            linePoint.y = output->sensor_origin_[1];
+            linePoint.z = output->sensor_origin_[2];
+            lineSegments.push_back(linePoint);
+
+            linePoint.x = start[0];
+            linePoint.y = start[1];
+            linePoint.z = start[2];
+            lineSegments.push_back(linePoint);
+
+            linePoint.x = start[0];
+            linePoint.y = start[1];
+            linePoint.z = start[2];
+            lineSegments.push_back(linePoint);
+
+            linePoint.x = centroid[0];
+            linePoint.y = centroid[1];
+            linePoint.z = centroid[2];
+            lineSegments.push_back(linePoint);
+            occupancyGrid->points.push_back(point);
+        }
     }
+
     freeCloud.points = occlusionFreeCloud_local->points;   
     ROS_INFO("Number of visible, non-occluded pointss:%d",freeCloud.points.size());
     visualizeFOV(location);
+    if(debugEnabled)
+        visualizeRaycast(location,lineSegments);
     return freeCloud;
+}
+
+template<typename PointInT>
+void OcclusionCulling<PointInT>::visualizeRaycast(geometry_msgs::Pose location, std::vector<geometry_msgs::Point> lineSegments) 
+{
+    int c_color[3];
+    c_color[0]=0;
+    c_color[1]=1;
+    c_color[2]=1;
+
+    visualization_msgs::Marker linesList = drawLines(lineSegments, 0, c_color,frameId, 0.02);
+    sensor_msgs::PointCloud2 cloud3;
+    pcl::toROSMsg(*occupancyGrid, cloud3);
+    cloud3.header.frame_id = frameId;
+    cloud3.header.stamp    = ros::Time::now();
+
+    occupancyPub.publish(cloud3);
+    rayPub.publish(linesList);
 }
 
 template<typename PointInT>
@@ -285,30 +309,6 @@ void OcclusionCulling<PointInT>::visualizeFOV(geometry_msgs::Pose location)
     marker_array.markers.push_back(linesList3);
     marker_array.markers.push_back(linesList4);
     sensor_fov_pub.publish(marker_array);
-}
-
-template<typename PointInT>
-visualization_msgs::Marker OcclusionCulling<PointInT>::drawLines(std::vector<geometry_msgs::Point> links, int id, int c_color[])
-{
-    visualization_msgs::Marker linksMarkerMsg;
-    linksMarkerMsg.header.frame_id=frameId;
-    linksMarkerMsg.header.stamp=ros::Time::now();
-    linksMarkerMsg.ns="link_marker";
-    linksMarkerMsg.id = id;
-    linksMarkerMsg.type = visualization_msgs::Marker::LINE_LIST;
-    linksMarkerMsg.scale.x = 0.08;
-    linksMarkerMsg.action  = visualization_msgs::Marker::ADD;
-    linksMarkerMsg.lifetime  = ros::Duration(1000);
-    std_msgs::ColorRGBA color;
-    color.r = (float)c_color[0]; color.g=(float)c_color[1]; color.b=(float)c_color[2], color.a=1.0f;
-
-    std::vector<geometry_msgs::Point>::iterator linksIterator;
-    for(linksIterator = links.begin();linksIterator != links.end();linksIterator++)
-    {
-        linksMarkerMsg.points.push_back(*linksIterator);
-        linksMarkerMsg.colors.push_back(color);
-    }
-   return linksMarkerMsg;
 }
 
 #endif

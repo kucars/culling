@@ -54,7 +54,7 @@ class OcclusionCulling
 public:
     ros::NodeHandle  nh;
     std::string model,frameId;
-    ros::Publisher sensor_fov_pub;
+    ros::Publisher sensor_fov_pub, occupancyPub, rayPub;
 
     typename pcl::PointCloud<PointInT>::Ptr cloud;
     typename pcl::PointCloud<PointInT>::Ptr cloudCopy;
@@ -62,6 +62,7 @@ public:
     typename pcl::PointCloud<PointInT>::Ptr occlusionFreeCloud;
     typename pcl::PointCloud<PointInT>::Ptr frustumCloud;
     typename pcl::PointCloud<PointInT>::Ptr rayCloud ;
+    typename pcl::PointCloud<PointInT>::Ptr occupancyGrid;
 
     pcl::PointCloud<PointInT> freeCloud;
     double voxelRes, originalVoxelsSize;
@@ -74,6 +75,7 @@ public:
     pcl::FrustumCullingTT<PointInT> fc;
     double maxAccuracyError, minAccuracyError;
     bool AccuracyMaxSet;
+    bool debugEnabled;
    
     //methods
     OcclusionCulling(ros::NodeHandle & n, std::string modelName);
@@ -91,7 +93,7 @@ public:
     pcl::PointCloud<PointInT> pointCloudViewportTransform(pcl::PointCloud<PointInT> pointCloud, geometry_msgs::Pose cameraPose);
     void SSMaxMinAccuracy(std::vector<geometry_msgs::PoseArray> sensorsPoses);
     void visualizeFOV(geometry_msgs::Pose location);
-    visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, int id, int c_color[]);
+    void visualizeRaycast(geometry_msgs::Pose location, std::vector<geometry_msgs::Point> lineSegments);
     bool contains(pcl::PointCloud<PointInT> c, PointInT p);
     pcl::PointCloud<PointInT> pointsDifference(pcl::PointCloud<PointInT> c2);
 };

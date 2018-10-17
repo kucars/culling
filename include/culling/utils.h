@@ -22,6 +22,9 @@
 #include <Eigen/Geometry>
 #include <tf/tf.h>
 #include <tf_conversions/tf_eigen.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
+
 #ifndef UTILS_H_
 #define UTILS_H_
 
@@ -90,47 +93,33 @@ geometry_msgs::Pose uav2camTransformation(geometry_msgs::Pose pose, std::vector<
     return p;
 }
 
-visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, int c_color, double scale)
+visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, int id, int c_color[], std::string frameId, float scale = 0.08)
 {
     visualization_msgs::Marker linksMarkerMsg;
-    linksMarkerMsg.header.frame_id="world";
-    linksMarkerMsg.header.stamp=ros::Time::now();
-    linksMarkerMsg.ns="link_marker";
-    linksMarkerMsg.id = 0;
-    linksMarkerMsg.type = visualization_msgs::Marker::LINE_LIST;
-    linksMarkerMsg.scale.x = scale;
-    linksMarkerMsg.action  = visualization_msgs::Marker::ADD;
-    linksMarkerMsg.lifetime  = ros::Duration(10000.0);
+    linksMarkerMsg.header.frame_id = frameId;
+    linksMarkerMsg.header.stamp    = ros::Time::now();
+    linksMarkerMsg.ns              = "link_marker";
+    linksMarkerMsg.id              = id;
+    linksMarkerMsg.type            = visualization_msgs::Marker::LINE_LIST;
+    linksMarkerMsg.scale.x         = scale;
+    linksMarkerMsg.action          = visualization_msgs::Marker::ADD;
+    linksMarkerMsg.lifetime        = ros::Duration(1000);
+
     std_msgs::ColorRGBA color;
-    //    color.r = 1.0f; color.g=.0f; color.b=.0f, color.a=1.0f;
-    if(c_color == 1)
-    {
-        color.r = 1.0;
-        color.g = 0.0;
-        color.b = 0.0;
-        color.a = 1.0;
-    }
-    else if(c_color == 2)
-    {
-        color.r = 0.0;
-        color.g = 1.0;
-        color.b = 0.0;
-        color.a = 1.0;
-    }
-    else
-    {
-        color.r = 0.0;
-        color.g = 0.0;
-        color.b = 1.0;
-        color.a = 1.0;
-    }
+    color.r = (float)c_color[0]; color.g=(float)c_color[1]; color.b=(float)c_color[2], color.a=1.0f;
+
     std::vector<geometry_msgs::Point>::iterator linksIterator;
-    for(linksIterator = links.begin();linksIterator != links.end();linksIterator++)
+    for(linksIterator = links.begin(); linksIterator != links.end(); linksIterator++)
     {
         linksMarkerMsg.points.push_back(*linksIterator);
         linksMarkerMsg.colors.push_back(color);
     }
     return linksMarkerMsg;
+}
+
+visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, int id, int c_color[], std::string frameId = "world")
+{
+    return drawLines(links, id, c_color, frameId, 0.08);
 }
 
 #endif
