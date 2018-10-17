@@ -53,7 +53,7 @@ void OcclusionCulling<PointInT>::initialize()
    nh.param<std::string>("frame_id", frameId,"world");
 
    ROS_INFO("Voxel Res:%f",voxelRes);
-   ROS_INFO("Sensor h,v,n,f=%f,%f,%f,%f frame id:%s",sensorHorFOV,sensorVerFOV,sensorNearLimit,sensorFarLimit,frameId);
+   ROS_INFO("Sensor h,v,n,f=%f,%f,%f,%f",sensorHorFOV,sensorVerFOV,sensorNearLimit,sensorFarLimit);
 
    originalVoxelsSize=0.0;
    id=0.0;
@@ -61,8 +61,8 @@ void OcclusionCulling<PointInT>::initialize()
    voxelFilterOriginal.setInputCloud(cloud);
    voxelFilterOriginal.setLeafSize(voxelRes, voxelRes, voxelRes);
    voxelFilterOriginal.initializeVoxelGrid();
-   min_b1 = voxelFilterOriginal.getMinBoxCoordinates ();
-   max_b1 = voxelFilterOriginal.getMaxBoxCoordinates ();
+   min_b1 = voxelFilterOriginal.getMinBoxCoordinates();
+   max_b1 = voxelFilterOriginal.getMaxBoxCoordinates();
    for (int kk = min_b1.z (); kk <= max_b1.z (); ++kk)
    {
        for (int jj = min_b1.y (); jj <= max_b1.y (); ++jj)
@@ -70,7 +70,7 @@ void OcclusionCulling<PointInT>::initialize()
            for (int ii = min_b1.x (); ii <= max_b1.x (); ++ii)
            {
                Eigen::Vector3i ijk1 (ii, jj, kk);
-               int index1 = voxelFilterOriginal.getCentroidIndexAt (ijk1);
+               int index1 = voxelFilterOriginal.getCentroidIndexAt(ijk1);
                if(index1!=-1)
                {
                    originalVoxelsSize++;
@@ -127,7 +127,7 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::getFrustumCloud()
 template<typename PointInT>
 pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geometry_msgs::Pose location)
 {
-    ROS_INFO("ExtractVisibleSurface \n" );
+    ROS_INFO("ExtractVisibleSurface" );
     ROS_INFO("Location X:%f Y:%f Z:%f",location.position.x,location.position.y,location.position.z);
 
     //*****Frustum Culling*******
@@ -140,24 +140,18 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
     ros::Time tic = ros::Time::now();
     fc.filter(*output);
     ros::Time toc = ros::Time::now();
-    std::cout<<"\nFrustum Filter took:"<< toc.toSec() - tic.toSec() << std::endl << std::flush;
-    ROS_INFO ("Cloud input size:%d Frustum size:%d \n",cloud->points.size(), output->size()) ;
+    ROS_INFO("Frustum Filter took:%f",toc.toSec() - tic.toSec());
+    ROS_INFO("Input cloud size:%d Frustum size:%d",cloud->points.size(), output->size()) ;
 
     frustumCloud->header              = output->header;
     frustumCloud->sensor_origin_      = output->sensor_origin_;
     frustumCloud->sensor_orientation_ = output->sensor_orientation_;
- 
+    frustumCloud->points              = output->points;
+
     //2:****voxel grid occlusion estimation (occlusion culling) *****
-    tf::Quaternion qt;
-    Eigen::Vector3f T;
-    qt.setX(location.orientation.x);
-    qt.setY(location.orientation.y);
-    qt.setZ(location.orientation.z);
-    qt.setW(location.orientation.w);    
-    Eigen::Quaternionf quat(qt.w(),qt.x(),qt.y(),qt.z());
-    T(0) = location.position.x; T(1) = location.position.y; T(2) = location.position.z;
-    output->sensor_origin_     = Eigen::Vector4f(T[0],T[1],T[2],0);
-    output->sensor_orientation_= quat;
+    output->sensor_origin_     = Eigen::Vector4f(location.position.x,location.position.y,location.position.z,0);
+    output->sensor_orientation_= Eigen::Quaternionf(location.orientation.w,location.orientation.x,location.orientation.y,location.orientation.z);
+
     pcl::VoxelGridOcclusionEstimationT<PointInT> voxelFilter;
     voxelFilter.setInputCloud(output);
     voxelFilter.setLeafSize(voxelRes, voxelRes, voxelRes);
@@ -165,15 +159,13 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
     tic = ros::Time::now();
     voxelFilter.initializeVoxelGrid();
     toc = ros::Time::now();
-    std::cout<<"\nVoxel Filter took:"<< toc.toSec() - tic.toSec() << std::endl << std::flush;
+    ROS_INFO("Voxel Filter took:%f",toc.toSec() - tic.toSec());
+    ROS_INFO("Number of points:%d",(int)output->points.size());
 
     int state,ret;
     PointInT p1,p2;
     PointInT point;
     std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> > out_ray;
-
-    // iterate over the entire frustum points
-    std::cout<<"\nNumber of points:"<<(int)output->points.size()<<"\n";fflush(stdout);
      
     for (int i = 0; i < (int)output->points.size(); i++)
     {
@@ -214,7 +206,7 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
         direction.normalize();
 
         // Estimate entry point into the voxel grid
-        float tmin = voxelFilter.rayBoxIntersection(output->sensor_origin_, direction, p1, p2); //where did this 4-input syntax come from?
+        float tmin = voxelFilter.rayBoxIntersection(output->sensor_origin_, direction, p1, p2);
 
         if (tmin == -1)
         {
@@ -238,7 +230,7 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(geom
         occlusionFreeCloud_local->points.push_back(ptest);
     }
     freeCloud.points = occlusionFreeCloud_local->points;   
-    std::cout<<"\nSize of Free points:"<<freeCloud.points.size();fflush(stdout);
+    ROS_INFO("Number of visible, non-occluded pointss:%d",freeCloud.points.size());
     visualizeFOV(location);
     return freeCloud;
 }

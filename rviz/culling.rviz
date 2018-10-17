@@ -6,8 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /PoseArray1
-        - /PointCloud22
+        - /robot_pose1
+        - /sensor_pose1
+        - /sensor_fov1
       Splitter Ratio: 0.5
     Tree Height: 795
   - Class: rviz/Selection
@@ -28,7 +29,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: occluded_pointcloud
 Visualization Manager:
   Class: ""
   Displays:
@@ -88,7 +89,7 @@ Visualization Manager:
       Enabled: true
       Head Length: 0.300000012
       Head Radius: 0.100000001
-      Name: Pose
+      Name: robot_pose
       Shaft Length: 1
       Shaft Radius: 0.0500000007
       Shape: Arrow
@@ -96,20 +97,28 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Alpha: 1
-      Arrow Length: 0.300000012
+      Arrow Length: 0.5
       Axes Length: 0.300000012
       Axes Radius: 0.00999999978
       Class: rviz/PoseArray
-      Color: 255; 25; 0
+      Color: 85; 170; 255
       Enabled: true
       Head Length: 0.0700000003
       Head Radius: 0.0299999993
-      Name: PoseArray
+      Name: sensor_pose
       Shaft Length: 0.230000004
       Shaft Radius: 0.00999999978
-      Shape: Arrow (Flat)
+      Shape: Arrow (3D)
       Topic: /sensor_pose
       Unreliable: false
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /sensor_fov
+      Name: sensor_fov
+      Namespaces:
+        link_marker: true
+      Queue Size: 100
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -121,7 +130,37 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: frustum_pointcloud
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.00999999978
+      Style: Flat Squares
+      Topic: /frustum_pointcloud
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: RGB8
       Decay Time: 0
       Enabled: false
       Invert Rainbow: false
@@ -129,7 +168,7 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: original_cloud
+      Name: original_pointcloud
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
@@ -151,15 +190,15 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: RGB8
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: occluded_pointcloud
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
@@ -170,15 +209,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /sensor_fov
-      Name: sensor_fov
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -204,25 +235,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 16.5560722
+      Distance: 19.4386826
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 3.9225049
+        Y: 5.13208103
+        Z: 2.32922769
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.805400491
+      Pitch: 0.19040148
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.52173352
+      Yaw: 4.01169777
     Saved: ~
 Window Geometry:
   Displays:

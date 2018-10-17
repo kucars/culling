@@ -3,7 +3,7 @@
 ####################
 pcd_input_file: house_colored4.pcd
 viewpoints_file: viewpoints.txt
-voxel_res: 0.5
+voxel_res: 0.1
 leaf_size: 0.1
 frame_id: world
 

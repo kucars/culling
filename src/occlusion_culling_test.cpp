@@ -69,12 +69,13 @@ int main(int argc, char **argv)
     PointCloud::Ptr occludedCloudPtr(new PointCloud);
     PointCloud::Ptr frustumCloudPtr(new PointCloud);
 
-    std::string pcdFileName,viewpointsFile;
+    std::string pcdFileName,viewpointsFile, frameId;
     double sensor_roll, sensor_pitch, sensor_yaw, sensor_x, sensor_y, sensor_z;
 
     // Load Params
     nh.param<std::string>("pcd_input_file", pcdFileName, std::string("sphere_verydensed.pcd"));
     nh.param<std::string>("viewpoints_file", viewpointsFile, std::string("viewpoints.txt"));
+    nh.param<std::string>("frame_id", frameId, std::string("world"));
     nh.param<double>("sensor_roll", sensor_roll, 0.0);
     nh.param<double>("sensor_pitch", sensor_pitch, 0.0);
     nh.param<double>("sensor_yaw", sensor_yaw, 0.0);
@@ -117,7 +118,8 @@ int main(int argc, char **argv)
     while (!feof(file))
     {
         fscanf(file,"%lf %lf %lf %lf\n",&locationx,&locationy,&locationz,&yaw);
-        std::cout << "Robot location : " << locationx << " " << locationy << " " << locationz << std::endl ;
+        ROS_INFO("Robot location x,y,z:%f,%f,%f ", locationx,locationy,locationz);
+
         robotLocation.pose.position.x = locationx;
         robotLocation.pose.position.y = locationy;
         robotLocation.pose.position.z = locationz;
@@ -127,17 +129,17 @@ int main(int argc, char **argv)
         robotLocation.pose.orientation.y = tf_q.getY();
         robotLocation.pose.orientation.z = tf_q.getZ();
         robotLocation.pose.orientation.w = tf_q.getW();
-        robotLocation.header.frame_id="world";
+        robotLocation.header.frame_id    = frameId;
         currentPosePub.publish(robotLocation);
-        viewpoints.poses.push_back(robotLocation.pose);
 
-        geometry_msgs::Pose c = uav2camTransformation(robotLocation.pose, sensorRPY2Robot, sensorXYZ2Robot);
+        geometry_msgs::Pose sensorViewPointPose = uav2camTransformation(robotLocation.pose, sensorRPY2Robot, sensorXYZ2Robot);
+        viewpoints.poses.push_back(sensorViewPointPose);
 
         PointCloud tempCloud;
         ros::Time tic = ros::Time::now();
 
         ///////////////////////////////////////////////////////////////
-        tempCloud    = occlusionCulling.extractVisibleSurface(c);
+        tempCloud    = occlusionCulling.extractVisibleSurface(sensorViewPointPose);
         frustumCloud = occlusionCulling.getFrustumCloud();
         ////////////////////////////////////////////////////////////////
 
@@ -163,13 +165,13 @@ int main(int argc, char **argv)
         if(i+1< viewpoints.poses.size())
         {
             p.x = viewpoints.poses[i].position.x;
-            p.y =  viewpoints.poses.at(i).position.y;
-            p.z =  viewpoints.poses.at(i).position.z;
+            p.y = viewpoints.poses.at(i).position.y;
+            p.z = viewpoints.poses.at(i).position.z;
             lineSegments.push_back(p);
 
             p.x = viewpoints.poses.at(i+1).position.x;
-            p.y =  viewpoints.poses.at(i+1).position.y;
-            p.z =  viewpoints.poses.at(i+1).position.z;
+            p.y = viewpoints.poses.at(i+1).position.y;
+            p.z = viewpoints.poses.at(i+1).position.z;
             lineSegments.push_back(p);
         }
     }
@@ -181,9 +183,8 @@ int main(int argc, char **argv)
     sensor_msgs::PointCloud2 cloud1;
     sensor_msgs::PointCloud2 cloud2;
     sensor_msgs::PointCloud2 cloud5;
-    //occlusionCulling.visualizeOriginalPointcloud() ;
-    //***original cloud & occlusion cull publish***
     
+    //***original cloud & occlusion cull publish***    
     pcl::toROSMsg(*originalCloud, cloud1); //cloud of original
     pcl::toROSMsg(*occludedCloudPtr, cloud2); //cloud of the not occluded voxels (blue) using occlusion culling
     pcl::toROSMsg(*frustumCloudPtr, cloud5); //cloud of the not occluded voxels (blue) using occlusion culling
