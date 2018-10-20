@@ -37,14 +37,14 @@
 #ifndef FRUSTUM_CULLING_H_
 #define FRUSTUM_CULLING_H_
 
-#include <pcl/point_types.h>
-#include <pcl/filters/filter_indices.h>
-#include <pcl/common/transforms.h>
 #include <pcl/common/eigen.h>
+#include <pcl/common/transforms.h>
+#include <pcl/filters/filter_indices.h>
+#include <pcl/point_types.h>
 
 namespace pcl
 {
-  /** \brief FrustumCulling filters points inside a frustum
+/** \brief FrustumCulling filters points inside a frustum
    *  given by pose and field of view of the camera.
    *
    * Code example:
@@ -72,33 +72,31 @@ namespace pcl
    * \author Aravindhan K Krishnan
    * \ingroup filters
    */
-  template<typename PointInT>
-  class FrustumCullingTT : public FilterIndices<PointInT>
-  {
+template <typename PointInT>
+class FrustumCullingTT : public FilterIndices<PointInT>
+{
     typedef typename Filter<PointInT>::PointCloud PointCloud;
     typedef typename PointCloud::Ptr PointCloudPtr;
     typedef typename PointCloud::ConstPtr PointCloudConstPtr;
 
-    public:
+  public:
+    typedef boost::shared_ptr<FrustumCullingTT> Ptr;
+    typedef boost::shared_ptr<const FrustumCullingTT> ConstPtr;
 
-      typedef boost::shared_ptr< FrustumCullingTT> Ptr;
-      typedef boost::shared_ptr< const FrustumCullingTT > ConstPtr;
+    using Filter<PointInT>::getClassName;
 
-
-      using Filter<PointInT>::getClassName;
-
-      FrustumCullingTT (bool extract_removed_indices = false)
-        : FilterIndices<PointInT>::FilterIndices (extract_removed_indices)
-        , camera_pose_ (Eigen::Matrix4f::Identity ())
-        , hfov_ (60.0f)
-        , vfov_ (60.0f)
-        , np_dist_ (0.1f)
-        , fp_dist_ (5.0f)
-      {
+    FrustumCullingTT(bool extract_removed_indices = false)
+        : FilterIndices<PointInT>::FilterIndices(extract_removed_indices)
+        , camera_pose_(Eigen::Matrix4f::Identity())
+        , hfov_(60.0f)
+        , vfov_(60.0f)
+        , np_dist_(0.1f)
+        , fp_dist_(5.0f)
+    {
         filter_name_ = "FrustumCullingTT";
-      }
+    }
 
-      /** \brief Set the pose of the camera w.r.t the origin
+    /** \brief Set the pose of the camera w.r.t the origin
         * \param[in] camera_pose the camera pose
         *
         * Note: This assumes a coordinate system where X is forward, 
@@ -116,130 +114,118 @@ namespace pcl
         * fc.setCameraPose (pose_new);
         * \endcode
         */
-      void 
-      setCameraPose (const Eigen::Matrix4f& camera_pose)
-      {
+    void setCameraPose(const Eigen::Matrix4f &camera_pose)
+    {
         camera_pose_ = camera_pose;
-      }
+    }
 
-      /** \brief Get the pose of the camera w.r.t the origin */
-      Eigen::Matrix4f
-      getCameraPose () const
-      {
+    /** \brief Get the pose of the camera w.r.t the origin */
+    Eigen::Matrix4f getCameraPose() const
+    {
         return (camera_pose_);
-      }
+    }
 
-      /** \brief Set the horizontal field of view for the camera in degrees
+    /** \brief Set the horizontal field of view for the camera in degrees
         * \param[in] hfov the field of view
         */
-      void 
-      setHorizontalFOV (float hfov)
-      {
+    void setHorizontalFOV(float hfov)
+    {
         hfov_ = hfov;
-      }
+    }
 
-      /** \brief Get the horizontal field of view for the camera in degrees */
-      float 
-      getHorizontalFOV () const
-      {
+    /** \brief Get the horizontal field of view for the camera in degrees */
+    float getHorizontalFOV() const
+    {
         return (hfov_);
-      }
+    }
 
-      /** \brief Set the vertical field of view for the camera in degrees
+    /** \brief Set the vertical field of view for the camera in degrees
         * \param[in] vfov the field of view
         */
-      void 
-      setVerticalFOV (float vfov)
-      {
+    void setVerticalFOV(float vfov)
+    {
         vfov_ = vfov;
-      }
+    }
 
-      /** \brief Get the vertical field of view for the camera in degrees */
-      float 
-      getVerticalFOV () const
-      {
+    /** \brief Get the vertical field of view for the camera in degrees */
+    float getVerticalFOV() const
+    {
         return (vfov_);
-      }
+    }
 
-      /** \brief Set the near plane distance
+    /** \brief Set the near plane distance
         * \param[in] np_dist the near plane distance
         */
-      void 
-      setNearPlaneDistance (float np_dist)
-      {
+    void setNearPlaneDistance(float np_dist)
+    {
         np_dist_ = np_dist;
-      }
+    }
 
-      /** \brief Get the near plane distance. */
-      float
-      getNearPlaneDistance () const
-      {
+    /** \brief Get the near plane distance. */
+    float getNearPlaneDistance() const
+    {
         return (np_dist_);
-      }
+    }
 
-      /** \brief Set the far plane distance
+    /** \brief Set the far plane distance
         * \param[in] fp_dist the far plane distance
         */
-      void 
-      setFarPlaneDistance (float fp_dist)
-      {
+    void setFarPlaneDistance(float fp_dist)
+    {
         fp_dist_ = fp_dist;
-      }
+    }
 
-      /** \brief Get the far plane distance */
-      float 
-      getFarPlaneDistance () const
-      {
+    /** \brief Get the far plane distance */
+    float getFarPlaneDistance() const
+    {
         return (fp_dist_);
-      }
-      //added part for debuging
-      Eigen::Vector3f fp_tl;
-      Eigen::Vector3f fp_tr;
-      Eigen::Vector3f fp_bl;
-      Eigen::Vector3f fp_br;
-      
-      Eigen::Vector3f np_tr;
-      Eigen::Vector3f np_bl;
-      Eigen::Vector3f np_br;
-      Eigen::Vector3f np_tl;
-    protected:
-      using PCLBase<PointInT>::input_;
-      using PCLBase<PointInT>::indices_;
-      using Filter<PointInT>::filter_name_;
-      using FilterIndices<PointInT>::negative_;
-      using FilterIndices<PointInT>::keep_organized_;
-      using FilterIndices<PointInT>::user_filter_value_;
-      using FilterIndices<PointInT>::extract_removed_indices_;
-      using FilterIndices<PointInT>::removed_indices_;
+    }
+    //added part for debuging
+    Eigen::Vector3f fp_tl;
+    Eigen::Vector3f fp_tr;
+    Eigen::Vector3f fp_bl;
+    Eigen::Vector3f fp_br;
 
-      /** \brief Sample of point indices into a separate PointCloud
+    Eigen::Vector3f np_tr;
+    Eigen::Vector3f np_bl;
+    Eigen::Vector3f np_br;
+    Eigen::Vector3f np_tl;
+
+  protected:
+    using PCLBase<PointInT>::input_;
+    using PCLBase<PointInT>::indices_;
+    using Filter<PointInT>::filter_name_;
+    using FilterIndices<PointInT>::negative_;
+    using FilterIndices<PointInT>::keep_organized_;
+    using FilterIndices<PointInT>::user_filter_value_;
+    using FilterIndices<PointInT>::extract_removed_indices_;
+    using FilterIndices<PointInT>::removed_indices_;
+
+    /** \brief Sample of point indices into a separate PointCloud
         * \param[out] output the resultant point cloud
         */
-      void
-      applyFilter (PointCloud &output);
+    void applyFilter(PointCloud &output);
 
-      /** \brief Sample of point indices
+    /** \brief Sample of point indices
         * \param[out] indices the resultant point cloud indices
         */
-      void
-      applyFilter (std::vector<int> &indices);
+    void applyFilter(std::vector<int> &indices);
 
-    private:
+  private:
+    /** \brief The camera pose */
+    Eigen::Matrix4f camera_pose_;
+    /** \brief Horizontal field of view */
+    float hfov_;
+    /** \brief Vertical field of view */
+    float vfov_;
+    /** \brief Near plane distance */
+    float np_dist_;
+    /** \brief Far plane distance */
+    float fp_dist_;
 
-      /** \brief The camera pose */
-      Eigen::Matrix4f camera_pose_;
-      /** \brief Horizontal field of view */
-      float hfov_;
-      /** \brief Vertical field of view */
-      float vfov_;
-      /** \brief Near plane distance */
-      float np_dist_;
-      /** \brief Far plane distance */
-      float fp_dist_;
-
-    public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  };
-}
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+}  // namespace pcl
 #include "culling/frustum_culling.hpp"
 #endif

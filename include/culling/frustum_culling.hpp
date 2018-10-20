@@ -48,137 +48,136 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 template <typename PointInT>
-void pcl::FrustumCullingTT<PointInT>::applyFilter (PointCloud& output)
+void pcl::FrustumCullingTT<PointInT>::applyFilter(PointCloud &output)
 {
-//  std::cout<<"YES, this is a test \n\n";
-  std::vector<int> indices;
-  if (keep_organized_)
-  {
-    bool temp = extract_removed_indices_;
-    extract_removed_indices_ = true;
-    applyFilter (indices);
-    extract_removed_indices_ = temp;
-    copyPointCloud (*input_, output);
-
-    for (size_t rii = 0; rii < removed_indices_->size (); ++rii)
+    //  std::cout<<"YES, this is a test \n\n";
+    std::vector<int> indices;
+    if (keep_organized_)
     {
-      PointInT &pt_to_remove = output.at ((*removed_indices_)[rii]);
-      pt_to_remove.x = pt_to_remove.y = pt_to_remove.z = user_filter_value_;
-      if (!pcl_isfinite (user_filter_value_))
-        output.is_dense = false;
+        bool temp = extract_removed_indices_;
+        extract_removed_indices_ = true;
+        applyFilter(indices);
+        extract_removed_indices_ = temp;
+        copyPointCloud(*input_, output);
+
+        for (size_t rii = 0; rii < removed_indices_->size(); ++rii)
+        {
+            PointInT &pt_to_remove = output.at((*removed_indices_)[rii]);
+            pt_to_remove.x = pt_to_remove.y = pt_to_remove.z = user_filter_value_;
+            if (!pcl_isfinite(user_filter_value_))
+                output.is_dense = false;
+        }
     }
-  }
-  else
-  {
-    output.is_dense = true;
-    applyFilter (indices);
-    copyPointCloud (*input_, indices, output);
-  }
+    else
+    {
+        output.is_dense = true;
+        applyFilter(indices);
+        copyPointCloud(*input_, indices, output);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 template <typename PointInT>
-void pcl::FrustumCullingTT<PointInT>::applyFilter (std::vector<int> &indices)
+void pcl::FrustumCullingTT<PointInT>::applyFilter(std::vector<int> &indices)
 {
-  Eigen::Vector4f pl_n; // near plane 
-  Eigen::Vector4f pl_f; // far plane
-  Eigen::Vector4f pl_t; // top plane
-  Eigen::Vector4f pl_b; // bottom plane
-  Eigen::Vector4f pl_r; // right plane
-  Eigen::Vector4f pl_l; // left plane
+    Eigen::Vector4f pl_n;  // near plane
+    Eigen::Vector4f pl_f;  // far plane
+    Eigen::Vector4f pl_t;  // top plane
+    Eigen::Vector4f pl_b;  // bottom plane
+    Eigen::Vector4f pl_r;  // right plane
+    Eigen::Vector4f pl_l;  // left plane
 
-  Eigen::Vector3f view = camera_pose_.block (0, 0, 3, 1);    // view vector for the camera  - first column of the rotation matrix
-  Eigen::Vector3f up = camera_pose_.block (0, 1, 3, 1);      // up vector for the camera    - second column of the rotation matix
-  Eigen::Vector3f right = camera_pose_.block (0, 2, 3, 1);   // right vector for the camera - third column of the rotation matrix
-  Eigen::Vector3f T = camera_pose_.block (0, 3, 3, 1);       // The (X, Y, Z) position of the camera w.r.t origin
+    Eigen::Vector3f view = camera_pose_.block(
+        0, 0, 3, 1);  // view vector for the camera  - first column of the rotation matrix
+    Eigen::Vector3f up = camera_pose_.block(
+        0, 1, 3, 1);  // up vector for the camera    - second column of the rotation matix
+    Eigen::Vector3f right = camera_pose_.block(
+        0, 2, 3, 1);  // right vector for the camera - third column of the rotation matrix
+    Eigen::Vector3f T =
+        camera_pose_.block(0, 3, 3, 1);  // The (X, Y, Z) position of the camera w.r.t origin
 
+    float vfov_rad = float(vfov_ * M_PI / 180);  // degrees to radians
+    float hfov_rad = float(hfov_ * M_PI / 180);  // degrees to radians
 
-  float vfov_rad = float (vfov_ * M_PI / 180); // degrees to radians
-  float hfov_rad = float (hfov_ * M_PI / 180); // degrees to radians
-  
-  float np_h = float (2 * tan (vfov_rad / 2) * np_dist_);  // near plane height
-  float np_w = float (2 * tan (hfov_rad / 2) * np_dist_);  // near plane width
+    float np_h = float(2 * tan(vfov_rad / 2) * np_dist_);  // near plane height
+    float np_w = float(2 * tan(hfov_rad / 2) * np_dist_);  // near plane width
 
-  float fp_h = float (2 * tan (vfov_rad / 2) * fp_dist_);    // far plane height
-  float fp_w = float (2 * tan (hfov_rad / 2) * fp_dist_);    // far plane width
+    float fp_h = float(2 * tan(vfov_rad / 2) * fp_dist_);  // far plane height
+    float fp_w = float(2 * tan(hfov_rad / 2) * fp_dist_);  // far plane width
 
-  Eigen::Vector3f fp_c (T + view * fp_dist_);                 // far plane center
-  fp_tl =(fp_c + (up * fp_h / 2) - (right * fp_w / 2));  // Top left corner of the far plane
-  fp_tr =(fp_c + (up * fp_h / 2) + (right * fp_w / 2));  // Top right corner of the far plane
-  fp_bl =(fp_c - (up * fp_h / 2) - (right * fp_w / 2));  // Bottom left corner of the far plane
-  fp_br =(fp_c - (up * fp_h / 2) + (right * fp_w / 2));  // Bottom right corner of the far plane
+    Eigen::Vector3f fp_c(T + view * fp_dist_);              // far plane center
+    fp_tl = (fp_c + (up * fp_h / 2) - (right * fp_w / 2));  // Top left corner of the far plane
+    fp_tr = (fp_c + (up * fp_h / 2) + (right * fp_w / 2));  // Top right corner of the far plane
+    fp_bl = (fp_c - (up * fp_h / 2) - (right * fp_w / 2));  // Bottom left corner of the far plane
+    fp_br = (fp_c - (up * fp_h / 2) + (right * fp_w / 2));  // Bottom right corner of the far plane
 
-  Eigen::Vector3f np_c (T + view * np_dist_);                   // near plane center
-  np_tl = np_c + (up * np_h/2) - (right * np_w/2); // Top left corner of the near plane
-  np_tr =(np_c + (up * np_h / 2) + (right * np_w / 2));   // Top right corner of the near plane
-  np_bl =(np_c - (up * np_h / 2) - (right * np_w / 2));   // Bottom left corner of the near plane
-  np_br =(np_c - (up * np_h / 2) + (right * np_w / 2));   // Bottom right corner of the near plane
+    Eigen::Vector3f np_c(T + view * np_dist_);              // near plane center
+    np_tl = np_c + (up * np_h / 2) - (right * np_w / 2);    // Top left corner of the near plane
+    np_tr = (np_c + (up * np_h / 2) + (right * np_w / 2));  // Top right corner of the near plane
+    np_bl = (np_c - (up * np_h / 2) - (right * np_w / 2));  // Bottom left corner of the near plane
+    np_br = (np_c - (up * np_h / 2) + (right * np_w / 2));  // Bottom right corner of the near plane
 
-  pl_f.block (0, 0, 3, 1).matrix () = (fp_bl - fp_br).cross (fp_tr - fp_br);   // Far plane equation - cross product of the 
-  pl_f (3) = -fp_c.dot (pl_f.block (0, 0, 3, 1));                    // perpendicular edges of the far plane
+    pl_f.block(0, 0, 3, 1).matrix() =
+        (fp_bl - fp_br).cross(fp_tr - fp_br);     // Far plane equation - cross product of the
+    pl_f(3) = -fp_c.dot(pl_f.block(0, 0, 3, 1));  // perpendicular edges of the far plane
 
-  pl_n.block (0, 0, 3, 1).matrix () = (np_tr - np_br).cross (np_bl - np_br);   // Near plane equation - cross product of the 
-  pl_n (3) = -np_c.dot (pl_n.block (0, 0, 3, 1));                    // perpendicular edges of the far plane
+    pl_n.block(0, 0, 3, 1).matrix() =
+        (np_tr - np_br).cross(np_bl - np_br);     // Near plane equation - cross product of the
+    pl_n(3) = -np_c.dot(pl_n.block(0, 0, 3, 1));  // perpendicular edges of the far plane
 
-  Eigen::Vector3f a (fp_bl - T);    // Vector connecting the camera and far plane bottom left
-  Eigen::Vector3f b (fp_br - T);    // Vector connecting the camera and far plane bottom right
-  Eigen::Vector3f c (fp_tr - T);    // Vector connecting the camera and far plane top right
-  Eigen::Vector3f d (fp_tl - T);    // Vector connecting the camera and far plane top left
+    Eigen::Vector3f a(fp_bl - T);  // Vector connecting the camera and far plane bottom left
+    Eigen::Vector3f b(fp_br - T);  // Vector connecting the camera and far plane bottom right
+    Eigen::Vector3f c(fp_tr - T);  // Vector connecting the camera and far plane top right
+    Eigen::Vector3f d(fp_tl - T);  // Vector connecting the camera and far plane top left
 
-  //                   Frustum and the vectors a, b, c and d. T is the position of the camera
-  //                             _________
-  //                           /|       . |
-  //                       d  / |   c .   |
-  //                         /  | __._____| 
-  //                        /  /  .      .
-  //                 a <---/-/  .    .
-  //                      / / .   .  b
-  //                     /   .
-  //                     . 
-  //                   T
-  //
+    //                   Frustum and the vectors a, b, c and d. T is the position of the camera
+    //                             _________
+    //                           /|       . |
+    //                       d  / |   c .   |
+    //                         /  | __._____|
+    //                        /  /  .      .
+    //                 a <---/-/  .    .
+    //                      / / .   .  b
+    //                     /   .
+    //                     .
+    //                   T
+    //
 
-  pl_r.block (0, 0, 3, 1).matrix () = b.cross (c);
-  pl_l.block (0, 0, 3, 1).matrix () = d.cross (a);
-  pl_t.block (0, 0, 3, 1).matrix () = c.cross (d);
-  pl_b.block (0, 0, 3, 1).matrix () = a.cross (b);
+    pl_r.block(0, 0, 3, 1).matrix() = b.cross(c);
+    pl_l.block(0, 0, 3, 1).matrix() = d.cross(a);
+    pl_t.block(0, 0, 3, 1).matrix() = c.cross(d);
+    pl_b.block(0, 0, 3, 1).matrix() = a.cross(b);
 
-  pl_r (3) = -T.dot (pl_r.block (0, 0, 3, 1));
-  pl_l (3) = -T.dot (pl_l.block (0, 0, 3, 1));
-  pl_t (3) = -T.dot (pl_t.block (0, 0, 3, 1));
-  pl_b (3) = -T.dot (pl_b.block (0, 0, 3, 1));
+    pl_r(3) = -T.dot(pl_r.block(0, 0, 3, 1));
+    pl_l(3) = -T.dot(pl_l.block(0, 0, 3, 1));
+    pl_t(3) = -T.dot(pl_t.block(0, 0, 3, 1));
+    pl_b(3) = -T.dot(pl_b.block(0, 0, 3, 1));
 
-  if (extract_removed_indices_)
-  {
-    removed_indices_->resize (indices_->size ());
-  }
-  indices.resize (indices_->size ());
-  size_t indices_ctr = 0;
-  size_t removed_ctr = 0;
-  for (size_t i = 0; i < indices_->size (); i++) 
-  {
-    int idx = indices_->at (i);
-    Eigen::Vector4f pt (input_->points[idx].x,
-                        input_->points[idx].y,
-                        input_->points[idx].z,
-                        1.0f);
-    bool is_in_fov = (pt.dot (pl_l) <= 0) && 
-                     (pt.dot (pl_r) <= 0) &&
-                     (pt.dot (pl_t) <= 0) && 
-                     (pt.dot (pl_b) <= 0) && 
-                     (pt.dot (pl_f) <= 0) &&
-                     (pt.dot (pl_n) <= 0);
-    if (is_in_fov ^ negative_)
+    if (extract_removed_indices_)
     {
-      indices[indices_ctr++] = idx;
+        removed_indices_->resize(indices_->size());
     }
-    else if (extract_removed_indices_)
+    indices.resize(indices_->size());
+    size_t indices_ctr = 0;
+    size_t removed_ctr = 0;
+    for (size_t i = 0; i < indices_->size(); i++)
     {
-      (*removed_indices_)[removed_ctr++] = idx;
+        int idx = indices_->at(i);
+        Eigen::Vector4f pt(input_->points[idx].x, input_->points[idx].y, input_->points[idx].z,
+                           1.0f);
+        bool is_in_fov = (pt.dot(pl_l) <= 0) && (pt.dot(pl_r) <= 0) && (pt.dot(pl_t) <= 0) &&
+                         (pt.dot(pl_b) <= 0) && (pt.dot(pl_f) <= 0) && (pt.dot(pl_n) <= 0);
+        if (is_in_fov ^ negative_)
+        {
+            indices[indices_ctr++] = idx;
+        }
+        else if (extract_removed_indices_)
+        {
+            (*removed_indices_)[removed_ctr++] = idx;
+        }
     }
-  }
-  indices.resize (indices_ctr);
-  removed_indices_->resize (removed_ctr);
+    indices.resize(indices_ctr);
+    removed_indices_->resize(removed_ctr);
 }
 
 #endif
