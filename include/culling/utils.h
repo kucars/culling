@@ -114,7 +114,7 @@ visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, in
     linksMarkerMsg.type = visualization_msgs::Marker::LINE_LIST;
     linksMarkerMsg.scale.x = scale;
     linksMarkerMsg.action = visualization_msgs::Marker::ADD;
-    linksMarkerMsg.lifetime = ros::Duration(1000);
+    linksMarkerMsg.lifetime = ros::Duration(1);
 
     std_msgs::ColorRGBA color;
     color.r = (float)c_color[0];

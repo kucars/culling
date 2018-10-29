@@ -40,6 +40,7 @@
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/PoseArray.h>
 #include <pcl/common/eigen.h>
+#include <pcl/common/common.h>
 #include <pcl/common/transforms.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
@@ -54,7 +55,6 @@ class OcclusionCulling
   public:
     ros::NodeHandle nh;
     std::string model, frameId;
-    ros::Publisher sensor_fov_pub, occupancyPub, rayPub;
 
     typename pcl::PointCloud<PointInT>::Ptr cloud;
     typename pcl::PointCloud<PointInT>::Ptr cloudCopy;
@@ -70,13 +70,13 @@ class OcclusionCulling
     double id;
     pcl::VoxelGridOcclusionEstimationT<PointInT> voxelFilterOriginal;
     Eigen::Vector3i max_b1, min_b1;
-    visualization_msgs::Marker linesList1, linesList2, linesList3, linesList4;
-    visualization_msgs::MarkerArray marker_array;
     pcl::FrustumCullingTT<PointInT> fc;
     double maxAccuracyError, minAccuracyError;
     bool AccuracyMaxSet;
     bool debugEnabled;
-
+    visualization_msgs::MarkerArray markerArray;
+    visualization_msgs::Marker rayLines;
+    sensor_msgs::PointCloud2 occupancyGridCloud;
     //methods
     OcclusionCulling(ros::NodeHandle& n, std::string modelName);
     OcclusionCulling(ros::NodeHandle& n, typename pcl::PointCloud<PointInT>::Ptr& cloudPtr);
@@ -84,6 +84,9 @@ class OcclusionCulling
 
     pcl::PointCloud<PointInT> extractVisibleSurface(geometry_msgs::Pose location);
     pcl::PointCloud<PointInT> getFrustumCloud();
+    visualization_msgs::MarkerArray getFOV();
+    sensor_msgs::PointCloud2 getOccupancyGridCloud();
+    visualization_msgs::Marker getRays();
     //    float calcCoveragePercent(geometry_msgs::Pose location);
     void initialize();
     float calcCoveragePercent(typename pcl::PointCloud<PointInT>::Ptr cloud_filtered);

@@ -65,6 +65,8 @@ void pcl::VoxelGridOcclusionEstimationT<PointInT>::initializeVoxelGrid()
     // set the sensor origin and sensor orientation
     sensor_origin_ = filtered_cloud_.sensor_origin_;
     sensor_orientation_ = filtered_cloud_.sensor_orientation_;
+    std::cout<<"Sensor Origin X:"<< sensor_origin_(0)<<" Y:"<<sensor_origin_(1)<<" Z:"<<sensor_origin_(2)<<"\n";
+    std::cout<<"Leaf Size X:"<< leaf_size_[0]<<" Y:"<<leaf_size_[1]<<" Z:"<<leaf_size_[2]<<"\n";
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -378,9 +380,10 @@ int pcl::VoxelGridOcclusionEstimationT<PointInT>::rayTraversal(const Eigen::Vect
 
     // index of the point in the point cloud
     int index;
-
-    while ((ijk[0] < max_b_[0] + 1) && (ijk[0] >= min_b_[0]) && (ijk[1] < max_b_[1] + 1) &&
-           (ijk[1] >= min_b_[1]) && (ijk[2] < max_b_[2] + 1) && (ijk[2] >= min_b_[2]))
+    //TODO: there is a rounding error at the max where the ijk values are rounded up , while the max_b is rounded down !
+    //Info: I added the <= as temp workaround
+    while ((ijk[0] <= max_b_[0] + 1) && (ijk[0] >= min_b_[0]) && (ijk[1] <= max_b_[1] + 1) &&
+           (ijk[1] >= min_b_[1]) && (ijk[2] <= max_b_[2] + 1) && (ijk[2] >= min_b_[2]))
     {
         // check if we reached target voxel
         if (ijk[0] == target_voxel[0] && ijk[1] == target_voxel[1] && ijk[2] == target_voxel[2])
@@ -477,8 +480,11 @@ int pcl::VoxelGridOcclusionEstimationT<PointInT>::rayTraversal(
     // the index of the cloud (-1 if empty)
     int index = -1;
     int result = 0;
-    while ((ijk[0] < max_b_[0] + 1) && (ijk[0] + 1 >= min_b_[0]) && (ijk[1] < max_b_[1] + 1) &&
-           (ijk[1] + 1 >= min_b_[1]) && (ijk[2] < max_b_[2] + 1) && (ijk[2] + 1 >= min_b_[2]))
+    //std::cout<<" min:"<<min_b_<<" max:"<<max_b_<<" ijk:"<<ijk;
+    //TODO: there is a rounding error at the max where the ijk values are rounded up , while the max_b is rounded down ! 
+    //Info: I added the <= as temp workaround
+    while ((ijk[0] <= max_b_[0] + 1) && (ijk[0] + 1 >= min_b_[0]) && (ijk[1] <= max_b_[1] + 1) &&
+           (ijk[1] + 1 >= min_b_[1]) && (ijk[2] <= max_b_[2] + 1) && (ijk[2] + 1 >= min_b_[2]))
     {
         // add voxel to ray
         out_ray.push_back(ijk);
