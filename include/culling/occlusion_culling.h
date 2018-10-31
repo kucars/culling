@@ -99,7 +99,7 @@ class OcclusionCulling
     void SSMaxMinAccuracy(std::vector<geometry_msgs::PoseArray> sensorsPoses);
     void visualizeFOV(geometry_msgs::Pose location);
     void visualizeRaycast(geometry_msgs::Pose location,
-                          std::vector<geometry_msgs::Point> lineSegments);
+                          std::vector<geometry_msgs::Point> lineSegments,int color[]);
     bool contains(pcl::PointCloud<PointInT> c, PointInT p);
     pcl::PointCloud<PointInT> pointsDifference(pcl::PointCloud<PointInT> c2);
 };

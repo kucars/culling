@@ -52,7 +52,7 @@ void OcclusionCulling<PointInT>::initialize()
     nh.param<bool>("debug_enabled", debugEnabled, false);
     nh.param<std::string>("frame_id", frameId, "world");
 
-    ROS_INFO("Voxel Res:%f, Debug Enabled:%d, sensor_near:%f, sensor_far:%f",voxelRes, debugEnabled, sensorNearLimit, sensorFarLimit );
+    ROS_INFO("Voxel Res:%f, Debug Enabled:%d, sensor_near:%f, sensor_far:%f frame_id:%s",voxelRes, debugEnabled, sensorNearLimit, sensorFarLimit,frameId.c_str() );
     ROS_INFO("Sensor h,v,n,f=%f,%f,%f,%f",sensorHorFOV, sensorVerFOV, sensorNearLimit,
              sensorFarLimit);
 
@@ -206,7 +206,11 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(
     geometry_msgs::Point linePoint;
     occupancyGrid->points.clear();
     std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> > outRay;
+
+    int redColor[3]  = {1,0,0};
+    int cyanColor[3] = {0,1,1};
     // iterate over the entire frustum points
+    int rayCounts = 0;
     for (uint i = 0; i < output->points.size(); i++)
     {
         PointInT ptest = output->points[i];
@@ -227,7 +231,7 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(
         //ret = voxelFilter.occlusionEstimation(occupiedState, outRay, ijk);
         ret = voxelFilter.occlusionEstimation(occupiedState, ijk);
         if (ret == -1 || occupiedState == 1)
-            continue;
+           continue;
         //ROS_INFO("Ray Size:%d",outRay.size());
         // estimate the occluded space
         //std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> > occluded_voxels;
@@ -277,16 +281,19 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(
             linePoint.z = start[2];
             lineSegments.push_back(linePoint);
             */
+            
             linePoint.x = start[0];
             linePoint.y = start[1];
             linePoint.z = start[2];
             lineSegments.push_back(linePoint);
-
+            
             linePoint.x = centroid[0];
             linePoint.y = centroid[1];
             linePoint.z = centroid[2];
             lineSegments.push_back(linePoint);
+            
             occupancyGrid->points.push_back(point);
+            //ROS_INFO("Start xyz(%f,%f,%f) End xyz(%f,%f,%f)",start[0],start[1],start[2],centroid[0],centroid[1],centroid[2]);
         }
     }
 
@@ -294,20 +301,16 @@ pcl::PointCloud<PointInT> OcclusionCulling<PointInT>::extractVisibleSurface(
     ROS_INFO("Number of visible, non-occluded pointss:%d", freeCloud.points.size());
     visualizeFOV(location);
     if (debugEnabled)
-        visualizeRaycast(location, lineSegments);
+        visualizeRaycast(location, lineSegments, redColor);
     return freeCloud;
 }
 
 template <typename PointInT>
 void OcclusionCulling<PointInT>::visualizeRaycast(geometry_msgs::Pose location,
-                                                  std::vector<geometry_msgs::Point> lineSegments)
+                                                  std::vector<geometry_msgs::Point> lineSegments, int color[])
 {
-    int c_color[3];
-    c_color[0] = 0;
-    c_color[1] = 1;
-    c_color[2] = 1;
 
-    rayLines = drawLines(lineSegments, 0, c_color, frameId, 0.02);
+    rayLines = drawLines(lineSegments, 0, color, frameId, 0.02);
     pcl::toROSMsg(*occupancyGrid, occupancyGridCloud);
     occupancyGridCloud.header.frame_id = frameId;
     occupancyGridCloud.header.stamp = ros::Time::now();

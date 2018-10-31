@@ -65,8 +65,6 @@ void pcl::VoxelGridOcclusionEstimationT<PointInT>::initializeVoxelGrid()
     // set the sensor origin and sensor orientation
     sensor_origin_ = filtered_cloud_.sensor_origin_;
     sensor_orientation_ = filtered_cloud_.sensor_orientation_;
-    std::cout<<"Sensor Origin X:"<< sensor_origin_(0)<<" Y:"<<sensor_origin_(1)<<" Z:"<<sensor_origin_(2)<<"\n";
-    std::cout<<"Leaf Size X:"<< leaf_size_[0]<<" Y:"<<leaf_size_[1]<<" Z:"<<leaf_size_[2]<<"\n";
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -388,12 +386,23 @@ int pcl::VoxelGridOcclusionEstimationT<PointInT>::rayTraversal(const Eigen::Vect
         // check if we reached target voxel
         if (ijk[0] == target_voxel[0] && ijk[1] == target_voxel[1] && ijk[2] == target_voxel[2])
             return 0;
-
-        // check if voxel is occupied, if yes return 1 for occluded
+      
+        // check if voxel is occupied
         index = this->getCentroidIndexAt(ijk);
         if (index != -1)
-            return 1;
-
+        {
+            /*
+                When we iterate through points and not voxels, multiple points might be in the same voxel and simply checking
+                if the voxel is occupied is not enough as it will incorrectly report that it's occupied. We have to check that 
+                the distance between the occupied voxel and target is larger than the diagonal distance between 
+                voxels = leaf_size_[0]*2.0f*1.4142135f (1.4142135f = sqrt(2))
+            */
+            Eigen::Vector4f here   = getCentroidCoordinate (ijk);
+            Eigen::Vector4f target = getCentroidCoordinate (target_voxel);
+            double dist            = sqrt((here[0] -target[0])*(here[0] -target[0]) + (here[1] -target[1])*(here[1] -target[1]) +(here[2] -target[2])*(here[2] -target[2]));
+            if(dist>leaf_size_[0]*2.0f*1.4142135f)
+                return 1;
+        }
         // estimate next voxel
         if (t_max_x <= t_max_y && t_max_x <= t_max_z)
         {
@@ -497,11 +506,17 @@ int pcl::VoxelGridOcclusionEstimationT<PointInT>::rayTraversal(
         index = this->getCentroidIndexAt(ijk);
         if (index != -1)
         {
-            //Eigen::Vector4f here   = getCentroidCoordinate (ijk);
-            //Eigen::Vector4f target = getCentroidCoordinate (target_voxel);
-            //double dist            = sqrt((here[0] -target[0])*(here[0] -target[0]) + (here[1] -target[1])*(here[1] -target[1]) +(here[2] -target[2])*(here[2] -target[2]));
-            //if(dist>leaf_size_[0]*2)
-            result = 1;
+            /*
+                When we iterate through points and not voxels, multiple points might be in the same voxel and simply checking
+                if the voxel is occupied is not enough as it will incorrectly report that it's occupied. We have to check that 
+                the distance between the occupied voxel and target is larger than the diagonal distance between 
+                voxels = leaf_size_[0]*2.0f*1.4142135f (1.4142135f = sqrt(2))
+            */            
+            Eigen::Vector4f here   = getCentroidCoordinate (ijk);
+            Eigen::Vector4f target = getCentroidCoordinate (target_voxel);
+            double dist            = sqrt((here[0] -target[0])*(here[0] -target[0]) + (here[1] -target[1])*(here[1] -target[1]) +(here[2] -target[2])*(here[2] -target[2]));
+            if(dist>leaf_size_[0]*2.0f*1.4142135f)
+                result = 1;
         }
         // estimate next voxel
         if (t_max_x <= t_max_y && t_max_x <= t_max_z)

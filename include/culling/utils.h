@@ -104,7 +104,7 @@ geometry_msgs::Pose uav2camTransformation(geometry_msgs::Pose pose, std::vector<
 }
 
 visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, int id, int c_color[],
-                                     std::string frameId, float scale = 0.08)
+                                     std::string frameId= "world", float scale = 0.08, int duration=1)
 {
     visualization_msgs::Marker linksMarkerMsg;
     linksMarkerMsg.header.frame_id = frameId;
@@ -113,8 +113,10 @@ visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, in
     linksMarkerMsg.id = id;
     linksMarkerMsg.type = visualization_msgs::Marker::LINE_LIST;
     linksMarkerMsg.scale.x = scale;
+    linksMarkerMsg.scale.y = scale;
+    linksMarkerMsg.scale.z = scale;
     linksMarkerMsg.action = visualization_msgs::Marker::ADD;
-    linksMarkerMsg.lifetime = ros::Duration(1);
+    linksMarkerMsg.lifetime = ros::Duration(duration);
 
     std_msgs::ColorRGBA color;
     color.r = (float)c_color[0];
@@ -128,12 +130,6 @@ visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, in
         linksMarkerMsg.colors.push_back(color);
     }
     return linksMarkerMsg;
-}
-
-visualization_msgs::Marker drawLines(std::vector<geometry_msgs::Point> links, int id, int c_color[],
-                                     std::string frameId = "world")
-{
-    return drawLines(links, id, c_color, frameId, 0.08);
 }
 
 #endif
