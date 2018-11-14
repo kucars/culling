@@ -19,6 +19,8 @@
   <build_depend>eigen_conversions</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>visualization_msgs</build_depend>
+  <build_depend>octomap_msgs</build_depend>
+  
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>libpcl1</run_depend>
@@ -28,5 +30,5 @@
   <run_depend>eigen_conversions</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>visualization_msgs</run_depend>
-  
+  <run_depend>octomap_msgs</run_depend>
 </package>

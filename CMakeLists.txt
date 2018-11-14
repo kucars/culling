@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   rviz_visual_tools
   #octomap_world
+  octomap_msgs
 )
 
 FIND_PACKAGE(CUDA)
@@ -35,7 +36,7 @@ catkin_package(
   INCLUDE_DIRS include
   ${OCTOMAP_INCLUDE_DIRS}
   LIBRARIES ${OCTOMAP_LIBRARIES} ${OCTOMAP_LIBRARIES_DIR}
-  CATKIN_DEPENDS roscpp pcl_ros 
+  CATKIN_DEPENDS roscpp pcl_ros octomap_msgs
 )
 
 include_directories(include
